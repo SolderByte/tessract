@@ -1,0 +1,27 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ATMEL_ATTINY85-20SU
+D ATMEL ATTINY85-20SU
+K ATTINY85
+$ENDCMP
+#
+$CMP HM-10
+D HM-10
+K BLE
+$ENDCMP
+#
+$CMP MCP73832T
+D MCP73832T Li-polymer Charge Management Controller
+K Li-Po, Li-Ion
+$ENDCMP
+#
+$CMP MICRO-B_USB
+D Micro-B USB connector
+$ENDCMP
+#
+$CMP OSRAM_LRTB_GFTG
+D Osram LRTB GFTG
+K RGB LED
+$ENDCMP
+#
+#End Doc Library
