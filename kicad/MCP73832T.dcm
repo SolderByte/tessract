@@ -1,8 +1,0 @@
-EESchema-DOCLIB  Version 2.0
-#
-$CMP MCP73832T
-D MCP73832T Li-polymer Charge Management Controller
-K Li-Po, Li-Ion
-$ENDCMP
-#
-#End Doc Library

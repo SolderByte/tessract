@@ -1,8 +1,0 @@
-EESchema-DOCLIB  Version 2.0
-#
-$CMP OSRAM_LRTB_GFTG
-D Osram LRTB GFTG
-K RGB LED
-$ENDCMP
-#
-#End Doc Library
