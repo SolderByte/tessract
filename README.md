@@ -2,7 +2,7 @@
 
 
 BOM:
-x3 2.5 Ohm resistors or 3.3 Ohm
+x3 47 Ohm resistors
 x1 330 Ohm resistor
 x2 10k Ohm resistor
 x1 100k Ohm resistor
