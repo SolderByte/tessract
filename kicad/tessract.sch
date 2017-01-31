@@ -1,5 +1,4 @@
 EESchema Schematic File Version 2
-LIBS:tessract-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -46,11 +45,11 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L MICRO-B_USB U1
+L MICRO_B_USB U1
 U 1 1 581822BD
 P 800 3500
 F 0 "U1" H 800 3200 50  0000 C CNN
-F 1 "MICRO-B_USB" H 800 3800 50  0000 C CNN
+F 1 "MICRO_B_USB" H 800 3800 50  0000 C CNN
 F 2 "solderbyte:MICRO_B_USB" H 800 3500 60  0001 C CNN
 F 3 "" H 800 3500 60  0000 C CNN
 	1    800  3500
@@ -79,7 +78,7 @@ F 3 "" H 9550 1900 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L HM-10 U6
+L HM_10 U6
 U 1 1 5818238F
 P 9850 3050
 F 0 "U6" H 9850 2300 60  0001 C CNN
@@ -398,7 +397,7 @@ F 3 "" H 5250 2750 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L MOSFET-P Q1
+L MOSFET_P Q1
 U 1 1 58242248
 P 3900 3300
 F 0 "Q1" V 3950 3400 30  0000 L CNN
@@ -430,13 +429,13 @@ F 3 "" H 4400 2650 50  0000 C CNN
 	1    4400 2650
 	-1   0    0    -1  
 $EndComp
-Text Label 3200 2900 0    60   ~ 0
+Text Label 3050 2950 0    60   ~ 0
 VUSB_5V
-Text Label 3200 3250 0    60   ~ 0
+Text Label 3050 3300 0    60   ~ 0
 VBATT_3.7V
-Text Label 5850 2600 0    60   ~ 0
+Text Label 5850 2650 0    60   ~ 0
 VOUT_3.3V
-Text Label 4350 2900 0    60   ~ 0
+Text Label 4400 2950 0    60   ~ 0
 3.6V_MIN
 Text Notes 4300 4700 0    60   ~ 0
 160mA power consumption (300mA MAX capable LDO Regulator)
@@ -463,7 +462,6 @@ F 3 "" H 1500 3500 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 NoConn ~ 5750 3150
-NoConn ~ 4750 3150
 $Comp
 L SW_PUSH RESET_1
 U 1 1 5844B1CA
@@ -645,4 +643,39 @@ Wire Wire Line
 Connection ~ 8550 2650
 Wire Wire Line
 	8550 2950 8550 3900
+Wire Wire Line
+	4750 3150 4550 3150
+Wire Wire Line
+	4550 3150 4550 2950
+Connection ~ 4550 2950
+NoConn ~ 1000 3400
+NoConn ~ 1000 3500
+NoConn ~ 1000 3600
+NoConn ~ 9050 3350
+NoConn ~ 9050 3450
+NoConn ~ 9050 3550
+NoConn ~ 9050 3650
+NoConn ~ 9050 3750
+NoConn ~ 9050 3850
+NoConn ~ 9050 3950
+NoConn ~ 9050 4050
+NoConn ~ 9050 4150
+NoConn ~ 9600 4950
+NoConn ~ 9700 4950
+NoConn ~ 9800 4950
+NoConn ~ 9900 4950
+NoConn ~ 10000 4950
+NoConn ~ 10100 4950
+NoConn ~ 10700 4250
+NoConn ~ 10700 4150
+NoConn ~ 10700 4050
+NoConn ~ 10700 3950
+NoConn ~ 10700 3850
+NoConn ~ 10700 3750
+NoConn ~ 10700 3650
+NoConn ~ 10700 3550
+NoConn ~ 10700 3450
+NoConn ~ 10700 3350
+NoConn ~ 10700 3250
+NoConn ~ 10700 3150
 $EndSCHEMATC
