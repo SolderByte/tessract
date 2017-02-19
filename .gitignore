@@ -1,0 +1,11 @@
+### OS
+.DS_Store
+*.pdf
+
+### KiCad
+*.bak
+*.bck
+*.lib
+*.gm1
+*.gtl
+*.kicad_pcb-bak
