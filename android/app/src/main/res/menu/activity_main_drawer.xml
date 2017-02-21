@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Actions -->
+    <group>
+        <item
+            android:id="@+id/nav_scan_bt"
+            android:icon="@mipmap/ic_scan"
+            android:title="@string/nav_scan_bt" />
+    </group>
+
+    <!-- Options -->
+    <item android:title="@string/nav_options">
+        <menu>
+            <item
+                android:id="@+id/nav_help"
+                android:icon="@mipmap/ic_info"
+                android:title="@string/nav_help" />
+        </menu>
+    </item>
+
+</menu>
