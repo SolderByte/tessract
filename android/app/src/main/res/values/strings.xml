@@ -31,4 +31,12 @@
     <string name="dialog_notification_access_message">In order to receive application notifications, you must enable notification access for Tessract.</string>
     <string name="title_activity_delete">deleteActivity</string>
 
+    <!-- Notification -->
+    <string name="notification_title">Tessract</string>
+    <string name="notification_connect">Connect</string>
+    <string name="notification_connected">Connected</string>
+    <string name="notification_disconnect">Disconnect</string>
+    <string name="notification_disconnected">Disconnected</string>
+    <string name="notification_stop">Shut down</string>
+
 </resources>

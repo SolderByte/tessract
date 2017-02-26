@@ -1,8 +1,11 @@
 package com.solderbyte.tessract;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
@@ -29,13 +32,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Buttons
     private static Button buttonConnect = null;
 
+
     // Device
     private static CharSequence deviceName = null;
     private static CharSequence deviceAddress = null;
 
     // Store
     private static TessractStore store = null;
-    private static Config config = null;
 
     // TextViews
     private static TextView textViewState = null;
@@ -43,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(LOG_TAG, "onCreate");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -62,15 +66,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.startService(serviceIntent);
 
         // Register receivers
-        //this.registerReceiver(serviceStopReceiver, new IntentFilter(Intents.INTENT_SERVICE_STOP));
-        //this.registerReceiver(bluetoothLeReceiver, new IntentFilter(Intents.INTENT_BLUETOOTH));
+        this.registerReceivers();
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(LOG_TAG, "onDestroy");
+
+        // Unregister receivers
+        this.unregisterReceivers();
+
+        super.onDestroy();
     }
 
     @Override
     public void onBackPressed() {
         Log.d(LOG_TAG, "onBackPressed");
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -81,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d(LOG_TAG, "onCreateOptionsMenu");
+
         // Adds items to the toolbar menu
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
@@ -121,11 +135,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         String notificationListeners = Settings.Secure.getString(contentResolver, "enabled_notification_listeners");
         String packageName = this.getPackageName();
 
-        if(notificationListeners == null || !notificationListeners.contains(packageName)){
+        if (notificationListeners == null || !notificationListeners.contains(packageName)){
             Log.d(LOG_TAG, "Notification Access Disabled");
             this.showNotificationAccess();
-        }
-        else {
+        } else {
             Log.d(LOG_TAG, "Notification Access Enabled");
         }
     }
@@ -164,32 +177,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
     }
 
+    private void registerReceivers() {
+        Log.d(LOG_TAG, "registerReceivers");
+
+        this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
+        this.registerReceiver(bluetoothLeReceiver, new IntentFilter(Config.INTENT_BLUETOOTH));
+    }
+
     private void restoreUi() {
         Log.d(LOG_TAG, "restoreUi");
-        String name = store.getString(config.DEVICE_NAME);
-        String address = store.getString(config.DEVICE_ADDRESS);
-        String state = store.getString(config.DEVICE_STATE);
+        String name = store.getString(Config.DEVICE_NAME);
+        String address = store.getString(Config.DEVICE_ADDRESS);
+        String state = store.getString(Config.DEVICE_STATE);
 
         // Set textViewState
-        if(state.equals(store.STRING_DEFAULT)) {
+        if (state.equals(store.STRING_DEFAULT)) {
             state = getString(R.string.textview_state_disconnected);
         }
-        if(name.equals(store.STRING_DEFAULT)) {
+        if (name.equals(store.STRING_DEFAULT)) {
             String device = getString(R.string.textview_state_default);
             this.setTextViewState(state, device);
         }
-        if(!name.equals(store.STRING_DEFAULT)) {
+        if (!name.equals(store.STRING_DEFAULT)) {
             deviceName = name;
             this.setTextViewState(state, deviceName.toString());
         }
-        if(!address.equals(store.STRING_DEFAULT)) {
+        if (!address.equals(store.STRING_DEFAULT)) {
             deviceAddress = address;
         }
     }
 
     private void setTextViewState(String state, String device) {
         Log.d(LOG_TAG, "setTextViewState: " + state + ": " + device);
-        if(textViewState != null) {
+
+        if (textViewState != null) {
             textViewState.setText(state + ": " + device);
         }
     }
@@ -204,15 +225,46 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dialog.setPositiveButton(R.string.button_open, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int index) {
+                Log.d(LOG_TAG, "showNotificationAccess: open");
                 startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
             }
         });
         dialog.setNegativeButton(R.string.button_close, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int index) {
+                Log.d(LOG_TAG, "showNotificationAccess: close");
             }
         });
 
         AlertDialog alert = dialog.create();
         alert.show();
     }
+
+    private void unregisterReceivers() {
+        Log.d(LOG_TAG, "unregisterReceivers");
+
+        this.unregisterReceiver(shutdownReceiver);
+        this.unregisterReceiver(bluetoothLeReceiver);
+    }
+
+    private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(LOG_TAG, "bluetoothLeReceiver");
+        }
+    };
+
+    private BroadcastReceiver shutdownReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(LOG_TAG, "shutdownReceiver");
+
+            // Unregister Receivers
+            MainActivity.this.unregisterReceivers();
+
+            // Stop self
+            MainActivity.this.finish();
+        }
+    };
 }
