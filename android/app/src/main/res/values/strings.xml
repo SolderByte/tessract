@@ -2,8 +2,16 @@
     <!-- App settings -->
     <string name="app_name">Tessract</string>
 
-    <!-- Toolbar -->
-    <string name="action_settings">Settings</string>
+    <!-- Buttons -->
+    <string name="button_connect">Connect</string>
+    <string name="button_open">Open</string>
+    <string name="button_close">Close</string>
+
+    <!-- Dialog text -->
+    <string name="dialog_notification_access_title">Enable Notification Access</string>
+    <string name="dialog_notification_access_message">In order to receive application notifications, you must enable notification access for Tessract.</string>
+    <string name="title_activity_delete">deleteActivity</string>
+    <string name="dialog_scan_bt_title">Devices found</string>
 
     <!-- Navbar -->
     <string name="nav_help">Help</string>
@@ -15,22 +23,6 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
-    <!-- Buttons -->
-    <string name="button_connect">Connect</string>
-    <string name="button_open">Open</string>
-    <string name="button_close">Close</string>
-
-    <!-- TextViews -->
-    <string name="textview_applications">Applications</string>
-    <string name="textview_state_disconnected">Device</string>
-    <string name="textview_state_connected">Connected</string>
-    <string name="textview_state_default">None</string>
-
-    <!-- Dialog text -->
-    <string name="dialog_notification_access_title">Enable Notification Access</string>
-    <string name="dialog_notification_access_message">In order to receive application notifications, you must enable notification access for Tessract.</string>
-    <string name="title_activity_delete">deleteActivity</string>
-
     <!-- Notification -->
     <string name="notification_title">Tessract</string>
     <string name="notification_connect">Connect</string>
@@ -39,4 +31,15 @@
     <string name="notification_disconnected">Disconnected</string>
     <string name="notification_stop">Shut down</string>
 
+    <!-- Progress Dialog -->
+    <string name="progressdialog_scan">Scanning...</string>
+
+    <!-- TextViews -->
+    <string name="textview_applications">Applications</string>
+    <string name="textview_state_disconnected">Device</string>
+    <string name="textview_state_connected">Connected</string>
+    <string name="textview_state_default">None</string>
+
+    <!-- Toolbar -->
+    <string name="action_settings">Settings</string>
 </resources>

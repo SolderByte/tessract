@@ -46,7 +46,8 @@ public class TessractService extends Service {
         this.createNotification(false);
 
         // Start services
-        this.startBluetoothLeService();
+        Intent serviceIntent = new Intent(this, BluetoothLeService.class);
+        this.startService(serviceIntent);
         //this.startNotificationService();
 
         this.startForeground(notificationId, notification);
@@ -126,23 +127,6 @@ public class TessractService extends Service {
         //this.registerReceiver(uiReceiver, new IntentFilter(Intents.INTENT_UI));
     }
 
-    private void startBluetoothLeService() {
-        Log.d(LOG_TAG, "startBluetoothLeService");
-
-        Intent bluetoothLeServiceIntent = new Intent(this, BluetoothLeService.class);
-        this.bindService(bluetoothLeServiceIntent, bluetoothLeServiceConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    private void stopBluetoothLeService() {
-        Log.d(LOG_TAG, "stopBluetoothLeService");
-
-        try {
-            this.unbindService(bluetoothLeServiceConnection);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, e.toString());
-        }
-    }
-
     private void unregisterReceivers() {
         Log.d(LOG_TAG, "unregisterReceivers");
 
@@ -173,7 +157,8 @@ public class TessractService extends Service {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(LOG_TAG, "bluetoothLeReceiver");
+            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
+            Log.d(LOG_TAG, "bluetoothLeReceiver: " + message);
         }
     };
 
@@ -185,9 +170,6 @@ public class TessractService extends Service {
 
             // Unregister Receivers
             TessractService.this.unregisterReceivers();
-
-            // Stop services
-            TessractService.this.stopBluetoothLeService();
 
             // Clear notification
             TessractService.this.clearNotification();

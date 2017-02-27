@@ -1,15 +1,20 @@
 package com.solderbyte.tessract;
 
+import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
@@ -21,8 +26,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -32,10 +41,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Buttons
     private static Button buttonConnect = null;
 
-
     // Device
     private static CharSequence deviceName = null;
     private static CharSequence deviceAddress = null;
+    private static ArrayList<String> deviceList = null;
+    private static ArrayList<String> deviceScannedList = null;
+    private static ArrayList<String> devicePairedList = null;
+
+    // Permission
+    private static final int PERMISSION_ACCESS_COARSE_LOCATION = 100;
+
+    // Progress dialogs
+    private static ProgressDialog progressScan = null;
+    private static int progressScanIterations = 0;
+    private static int progressScanIncrement = 10;
+    private static int progressScanPeriod = 700;
 
     // Store
     private static TessractStore store = null;
@@ -60,6 +80,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Check notification access
         this.checkNotificationAccess();
+
+        // Check permissions
+        this.checkPermissions();
 
         // Start service
         Intent serviceIntent = new Intent(this, TessractService.class);
@@ -119,7 +142,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         if (id == R.id.nav_scan_bt) {
-
+            deviceList = null;
+            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_SCAN);
+            this.showProgressScan();
         } else if (id == R.id.nav_help) {
 
         }
@@ -127,6 +152,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_ACCESS_COARSE_LOCATION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(LOG_TAG, "User granted permissions");
+                } else {
+                    Log.d(LOG_TAG, "User denied permissions");
+                }
+                return;
+            }
+        }
     }
 
     private void checkNotificationAccess() {
@@ -140,6 +179,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             this.showNotificationAccess();
         } else {
             Log.d(LOG_TAG, "Notification Access Enabled");
+        }
+    }
+
+    private void checkPermissions() {
+        Log.d(LOG_TAG, "checkPermissions");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Log.d(LOG_TAG, "Permissions are needed");
+
+                this.requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_ACCESS_COARSE_LOCATION);
+            } else {
+                Log.d(LOG_TAG, "Permissions are granted");
+            }
         }
     }
 
@@ -207,6 +260,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public void sendIntent(String name, String message) {
+        Intent msg = new Intent(name);
+        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        this.sendBroadcast(msg);
+    }
+
     private void setTextViewState(String state, String device) {
         Log.d(LOG_TAG, "setTextViewState: " + state + ": " + device);
 
@@ -239,18 +298,100 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alert.show();
     }
 
+    private void showDialogScan() {
+        Log.d(LOG_TAG, "showDialogScan");
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle(R.string.dialog_scan_bt_title);
+
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, deviceList);
+
+        builder.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int index) {
+                Log.d(LOG_TAG, "index:" + index);
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void showProgressScan() {
+        Log.d(LOG_TAG, "showProgressScan");
+
+        progressScan = new ProgressDialog(MainActivity.this);
+        progressScan.setMessage(getString(R.string.progressdialog_scan));
+        progressScan.setCancelable(false);
+        progressScan.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progressScan.show();
+
+        progressScanIterations = 0;
+        this.startProgressScan();
+    }
+
+    private void stopProgressScan() {
+        Log.d(LOG_TAG, "stopProgressScan");
+
+        if(progressScan != null) {
+            progressScan.dismiss();
+        }
+    }
+
+    private void startProgressScan() {
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                progressScanIterations += 1;
+
+                if (progressScanIterations <= progressScanIncrement) {
+                    progressScan.incrementProgressBy(progressScanIncrement);
+                    Log.d(LOG_TAG, "Progress scan: " + progressScan.getProgress());
+                    MainActivity.this.startProgressScan();
+                } else {
+                    Log.d(LOG_TAG, "Progress scan completed");
+                }
+            }
+        }, progressScanPeriod);
+    }
+
     private void unregisterReceivers() {
         Log.d(LOG_TAG, "unregisterReceivers");
 
-        this.unregisterReceiver(shutdownReceiver);
-        this.unregisterReceiver(bluetoothLeReceiver);
+        try {
+            this.unregisterReceiver(shutdownReceiver);
+            this.unregisterReceiver(bluetoothLeReceiver);
+        } catch (Exception e) {
+            if (!e.getMessage().contains("Receiver not registered")) {
+                Log.e(LOG_TAG, e.toString());
+            }
+        }
+    }
+
+    private void updateDeviceList(ArrayList<String> list) {
+        Log.d(LOG_TAG, "updateDeviceList: " + list.get(0));
+
+        if (deviceList == null) {
+            deviceList = new ArrayList<String>();
+        }
+        deviceList.add(list.get(0));
     }
 
     private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(LOG_TAG, "bluetoothLeReceiver");
+            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
+            Log.d(LOG_TAG, "bluetoothLeReceiver: " + message);
+
+            if (message.equals(Config.INTENT_BLUETOOTH_SCANNED)) {
+                MainActivity.this.stopProgressScan();
+                MainActivity.this.showDialogScan();
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_DEVICE)) {
+                ArrayList<String> list = intent.getStringArrayListExtra(Config.INTENT_EXTRA_DATA);
+                Log.d(LOG_TAG, list.toString());
+                updateDeviceList(list);
+            }
         }
     };
 
