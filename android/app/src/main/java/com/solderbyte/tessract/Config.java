@@ -20,6 +20,7 @@ public class Config {
     public static final String INTENT_BLUETOOTH_SCAN = INTENT_BLUETOOTH + ".scan";
     public static final String INTENT_BLUETOOTH_SCANNED = INTENT_BLUETOOTH + ".scanned";
     public static final String INTENT_BLUETOOTH_CONNECT = INTENT_BLUETOOTH + ".connect";
+    public static final String INTENT_BLUETOOTH_CONNECTING = INTENT_BLUETOOTH + ".connecting";
     public static final String INTENT_BLUETOOTH_CONNECTED = INTENT_BLUETOOTH + ".connected";
     public static final String INTENT_BLUETOOTH_DISCONNECT = INTENT_BLUETOOTH + ".disconnect";
     public static final String INTENT_BLUETOOTH_DISCONNECTED = INTENT_BLUETOOTH + ".disconnected";
