@@ -39,4 +39,10 @@ public class Config {
         put(3, "START_REDELIVER_INTENT");
         put(15, "START_CONTINUATION_MASK");
     }};
+
+    public static HashMap<Integer, String> DEVICE_BONDS = new HashMap<Integer, String>() {{
+        put(10, "BOND_NONE");
+        put(11, "BOND_BONDING");
+        put(12, "BOND_BONDED");
+    }};
 }

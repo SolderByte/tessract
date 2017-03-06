@@ -43,17 +43,17 @@ public class TessractStore {
         return value;
     }
 
-    public void saveBoolean(String key, boolean value) {
+    public void setBoolean(String key, boolean value) {
         editor.putBoolean(key + ":boolean", value);
         editor.commit();
     }
 
-    public void saveInt(String key, int value) {
+    public void setInt(String key, int value) {
         editor.putInt(key + ":int", value);
         editor.commit();
     }
 
-    public void saveString(String key, String value) {
+    public void setString(String key, String value) {
         editor.putString(key + ":string", value);
         editor.commit();
     }

@@ -6,12 +6,16 @@
     <string name="button_connect">Connect</string>
     <string name="button_open">Open</string>
     <string name="button_close">Close</string>
+    <string name="button_select">Select</string>
 
     <!-- Dialog text -->
     <string name="dialog_notification_access_title">Enable Notification Access</string>
     <string name="dialog_notification_access_message">In order to receive application notifications, you must enable notification access for Tessract.</string>
+    <string name="dialog_scan_bt_title">Bluetooth Devices</string>
+    <string name="dialog_scan_bt_none">No devices found</string>
+    <string name="dialog_scan_bt_found">Found</string>
+    <string name="dialog_scan_bt_paired">Paired</string>
     <string name="title_activity_delete">deleteActivity</string>
-    <string name="dialog_scan_bt_title">Devices found</string>
 
     <!-- Navbar -->
     <string name="nav_help">Help</string>

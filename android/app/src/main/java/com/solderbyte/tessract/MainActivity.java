@@ -28,7 +28,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -40,13 +39,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     // Buttons
     private static Button buttonConnect = null;
+    private static FloatingActionButton fab = null;
 
     // Device
-    private static CharSequence deviceName = null;
-    private static CharSequence deviceAddress = null;
-    private static ArrayList<String> deviceList = null;
-    private static ArrayList<String> deviceScannedList = null;
-    private static ArrayList<String> devicePairedList = null;
+    private static String deviceName = null;
+    private static String deviceAddress = null;
+    private static ArrayList<String> combinedList = null;
+    private static ArrayList<ArrayList> deviceList = null;
 
     // Permission
     private static final int PERMISSION_ACCESS_COARSE_LOCATION = 100;
@@ -142,7 +141,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         if (id == R.id.nav_scan_bt) {
-            deviceList = null;
+            // reset devices array
+            combinedList = new ArrayList<String>();
+            deviceList = new ArrayList<ArrayList>();
+            combinedList.clear();
+            deviceList.clear();
+
             this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_SCAN);
             this.showProgressScan();
         } else if (id == R.id.nav_help) {
@@ -201,6 +205,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Buttons
         buttonConnect = (Button) findViewById(R.id.button_connect);
+        buttonConnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (deviceAddress != null) {
+                    Log.d(LOG_TAG, "buttonConnect: " + deviceName + ":" + deviceAddress);
+                    MainActivity.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CONNECT, deviceAddress);
+                } else {
+                    Log.d(LOG_TAG, "buttonConnect: No device set");
+                }
+            }
+        });
 
         // TextViews
         textViewState = (TextView) findViewById(R.id.textview_state);
@@ -210,12 +225,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setSupportActionBar(toolbar);
 
         // Floating action button
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Implement me!", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Snackbar.make(view, "Implement me!", Snackbar.LENGTH_LONG).setAction("Action", null).show();
             }
         });
 
@@ -239,6 +253,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void restoreUi() {
         Log.d(LOG_TAG, "restoreUi");
+
+        this.restoreDevice();
+    }
+
+    private void restoreDevice() {
+        Log.d(LOG_TAG, "restoreDevice");
         String name = store.getString(Config.DEVICE_NAME);
         String address = store.getString(Config.DEVICE_ADDRESS);
         String state = store.getString(Config.DEVICE_STATE);
@@ -253,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         if (!name.equals(store.STRING_DEFAULT)) {
             deviceName = name;
-            this.setTextViewState(state, deviceName.toString());
+            this.setTextViewState(state, deviceName);
         }
         if (!address.equals(store.STRING_DEFAULT)) {
             deviceAddress = address;
@@ -264,6 +284,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Intent msg = new Intent(name);
         msg.putExtra(Config.INTENT_EXTRA_MSG, message);
         this.sendBroadcast(msg);
+    }
+
+    public void sendIntent(String name, String message, String data) {
+        Intent msg = new Intent(name);
+        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        msg.putExtra(Config.INTENT_EXTRA_DATA, data);
+        this.sendBroadcast(msg);
+    }
+
+    public void sendIntent(String name, String message, ArrayList<String> list) {
+        Intent msg = new Intent(name);
+        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        msg.putStringArrayListExtra(Config.INTENT_EXTRA_DATA, list);
+        this.sendBroadcast(msg);
+    }
+
+    private void setDevice(String name, String address) {
+        Log.d(LOG_TAG, "setDevice: " + name + ":" + address);
+        deviceName = name;
+        deviceAddress = address;
+        store.setString(Config.DEVICE_NAME, name);
+        store.setString(Config.DEVICE_ADDRESS, address);
+
+        this.restoreDevice();
     }
 
     private void setTextViewState(String state, String device) {
@@ -302,13 +346,43 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Log.d(LOG_TAG, "showDialogScan");
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(R.string.dialog_scan_bt_title);
+        builder.setCancelable(false);
 
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, deviceList);
+        if (combinedList.size() == 0) {
+            // Devices not found
+            builder.setMessage(getString(R.string.dialog_scan_bt_none));
+        } else {
+            // Devices found
+            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, combinedList);
 
-        builder.setAdapter(arrayAdapter, new DialogInterface.OnClickListener() {
+            builder.setSingleChoiceItems(arrayAdapter, -1, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int index) {
+                    Log.d(LOG_TAG, "Scanned choice:" + index);
+
+                }
+            });
+
+            builder.setPositiveButton(getString(R.string.button_select), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int index) {
+                    int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+                    ArrayList<String> device = deviceList.get(selectedPosition);
+                    Log.d(LOG_TAG, "positive:" + selectedPosition + ", selected: " + device.toString());
+
+                    MainActivity.this.setDevice(device.get(0), device.get(1));
+
+                    dialog.dismiss();
+                }
+            });
+        }
+
+        builder.setNegativeButton(getString(R.string.button_close), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int index) {
-                Log.d(LOG_TAG, "index:" + index);
+                Log.d(LOG_TAG, "negative:" + index);
+
+                dialog.dismiss();
             }
         });
 
@@ -345,7 +419,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 if (progressScanIterations <= progressScanIncrement) {
                     progressScan.incrementProgressBy(progressScanIncrement);
-                    Log.d(LOG_TAG, "Progress scan: " + progressScan.getProgress());
+                    Log.d(LOG_TAG, "Progress scan: " + progressScan.getProgress() + "%");
                     MainActivity.this.startProgressScan();
                 } else {
                     Log.d(LOG_TAG, "Progress scan completed");
@@ -369,11 +443,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void updateDeviceList(ArrayList<String> list) {
         Log.d(LOG_TAG, "updateDeviceList: " + list.get(0));
+        String type;
 
-        if (deviceList == null) {
-            deviceList = new ArrayList<String>();
+        if (list.get(3).equals(Config.DEVICE_BONDS.get(10))) {
+            // BOND_NONE
+            type = getString(R.string.dialog_scan_bt_found);
+        } else {
+            // BOND_BONDED
+            type = getString(R.string.dialog_scan_bt_paired);
         }
-        deviceList.add(list.get(0));
+
+        combinedList.add(type + ": " + list.get(0));
+        deviceList.add(list);
     }
 
     private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {

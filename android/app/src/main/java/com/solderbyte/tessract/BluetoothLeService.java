@@ -98,6 +98,32 @@ public class BluetoothLeService extends Service {
         }
     }
 
+    public void getBluetoothPaired() {
+        Log.d(LOG_TAG, "getBluetoothPaired");
+
+        if (isEnabled) {
+            pairedDevices = bluetoothAdapter.getBondedDevices();
+
+            if (pairedDevices.size() > 0) {
+                for (BluetoothDevice device : pairedDevices) {
+                    Log.d(LOG_TAG, device.getName() + " : " + device.getAddress() + " : " + deviceTypes.get(device.getType()) + " : " + deviceBonds.get(device.getBondState()));
+
+                    ArrayList<String> list = new ArrayList<String>();
+                    list.add(device.getName());
+                    list.add(device.getAddress());
+                    list.add(deviceTypes.get(device.getType()));
+                    list.add(deviceBonds.get(device.getBondState()));
+                    BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, list);
+                }
+            }
+            else {
+                Log.d(LOG_TAG, "No getBondedDevices");
+            }
+        } else {
+            Log.d(LOG_TAG, "BluetoothAdapter is not enabled");
+        }
+    }
+
     private void registerReceivers() {
         Log.d(LOG_TAG, "registerReceivers");
 
@@ -250,9 +276,15 @@ public class BluetoothLeService extends Service {
             if (scannedDevices.add(device)) {
                 Log.d(LOG_TAG, device.getName() + " : " + device.getAddress() + " : " + deviceTypes.get(device.getType()) + " : " + deviceBonds.get(device.getBondState()));
 
+                if (device.getName() == null) {
+                    return;
+                }
+
                 ArrayList<String> list = new ArrayList<String>();
                 list.add(device.getName());
                 list.add(device.getAddress());
+                list.add(deviceTypes.get(device.getType()));
+                list.add(deviceBonds.get(device.getBondState()));
                 BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, list);
             }
         }
@@ -266,9 +298,15 @@ public class BluetoothLeService extends Service {
             if (scannedDevices.add(device)) {
                 Log.d(LOG_TAG, device.getName() + " : " + device.getAddress() + " : " + deviceTypes.get(device.getType()) + " : " + deviceBonds.get(device.getBondState()));
 
+                if (device.getName() == null) {
+                    return;
+                }
+
                 ArrayList<String> list = new ArrayList<String>();
                 list.add(device.getName());
                 list.add(device.getAddress());
+                list.add(deviceTypes.get(device.getType()));
+                list.add(deviceBonds.get(device.getBondState()));
                 BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, list);
             }
         }
@@ -284,9 +322,15 @@ public class BluetoothLeService extends Service {
                 if (scannedDevices.add(device)) {
                     Log.d(LOG_TAG, device.getName() + " : " + device.getAddress() + " : " + deviceTypes.get(device.getType()) + " : " + deviceBonds.get(device.getBondState()));
 
+                    if (device.getName() == null) {
+                        return;
+                    }
+
                     ArrayList<String> list = new ArrayList<String>();
                     list.add(device.getName());
                     list.add(device.getAddress());
+                    list.add(deviceTypes.get(device.getType()));
+                    list.add(deviceBonds.get(device.getBondState()));
                     BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, list);
                 }
             }
@@ -301,7 +345,11 @@ public class BluetoothLeService extends Service {
             Log.d(LOG_TAG, "bluetoothLeReceiver: " + message);
 
             if (message.equals(Config.INTENT_BLUETOOTH_SCAN)) {
+                BluetoothLeService.this.getBluetoothPaired();
                 BluetoothLeService.this.scanBluetooth();
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_CONNECT)) {
+                String address = intent.getStringExtra(Config.INTENT_EXTRA_DATA);
             }
         }
     };
