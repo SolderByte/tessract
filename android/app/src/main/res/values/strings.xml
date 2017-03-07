@@ -4,9 +4,11 @@
 
     <!-- Buttons -->
     <string name="button_connect">Connect</string>
+    <string name="button_disconnect">Disconnect</string>
     <string name="button_open">Open</string>
     <string name="button_close">Close</string>
     <string name="button_select">Select</string>
+    <string name="button_cancel">Cancel</string>
 
     <!-- Dialog text -->
     <string name="dialog_notification_access_title">Enable Notification Access</string>
@@ -37,11 +39,16 @@
 
     <!-- Progress Dialog -->
     <string name="progressdialog_scan">Scanning...</string>
+    <string name="progressdialog_connect">Connecting...</string>
+
+    <!-- Snackbar -->
+    <string name="snackbar_connected">Connected</string>
+    <string name="snackbar_disconnected">Disconnected</string>
+
 
     <!-- TextViews -->
     <string name="textview_applications">Applications</string>
-    <string name="textview_state_disconnected">Device</string>
-    <string name="textview_state_connected">Connected</string>
+    <string name="textview_device">Device</string>
     <string name="textview_state_default">None</string>
 
     <!-- Toolbar -->

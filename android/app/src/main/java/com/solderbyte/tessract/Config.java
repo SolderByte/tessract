@@ -24,6 +24,7 @@ public class Config {
     public static final String INTENT_BLUETOOTH_CONNECTED = INTENT_BLUETOOTH + ".connected";
     public static final String INTENT_BLUETOOTH_DISCONNECT = INTENT_BLUETOOTH + ".disconnect";
     public static final String INTENT_BLUETOOTH_DISCONNECTED = INTENT_BLUETOOTH + ".disconnected";
+    public static final String INTENT_BLUETOOTH_CHARACTERISTIC = INTENT_BLUETOOTH + ".characteristic";
     public static final String INTENT_EXTRA_DATA = INTENT + ".extra.data";
     public static final String INTENT_EXTRA_MSG = INTENT + ".extra.message";
     public static final String INTENT_SERVICE = INTENT + ".service";

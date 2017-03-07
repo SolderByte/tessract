@@ -8,6 +8,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -39,6 +40,8 @@ public class BluetoothLeService extends Service {
     private static BluetoothManager bluetoothManager;
     private static BluetoothAdapter bluetoothAdapter;
     private static BluetoothGatt bluetoothGatt;
+    private static BluetoothGattDescriptor bluetoothGattDescriptor;
+    private static BluetoothGattCharacteristic bluetoothGattCharacteristic;
     private static String bluetoothAddress;
 
     // Hashmaps
@@ -100,8 +103,11 @@ public class BluetoothLeService extends Service {
         put(5, "GATT_INSUFFICIENT_AUTHENTICATION");
         put(6, "GATT_REQUEST_NOT_SUPPORTED");
         put(7, "GATT_INVALID_OFFSET");
+        put(8, "LINK_LOSS");
         put(13, "GATT_INVALID_ATTRIBUTE_LENGTH");
+        put(22, "GATT_CONN_TERMINATE_LOCAL_HOST");
         put(15, "GATT_INSUFFICIENT_ENCRYPTION");
+        put(133, "GATT_ERROR");
         put(143, "GATT_CONNECTION_CONGESTED");
         put(257, "GATT_FAILURE");
     }};
@@ -130,6 +136,7 @@ public class BluetoothLeService extends Service {
     private static UUID deviceNameUuid = UUID.fromString("00002A00" + bluetoothSuffix);
     private static UUID tessractService = UUID.fromString("000FFE0" + bluetoothSuffix);
     private static UUID tessractCharacteristic = UUID.fromString("000FFE1" + bluetoothSuffix);
+    private static UUID tessractDescriptor = UUID.fromString("0002902" + bluetoothSuffix);
 
     @Nullable
     @Override
@@ -179,7 +186,7 @@ public class BluetoothLeService extends Service {
         }
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.d(LOG_TAG, "onConnectionStateChange: " + gattStatus.get(status) + ":" + gattState.get(newState));
+            Log.d(LOG_TAG, "onConnectionStateChange: " + status + " - " +gattStatus.get(status) + ":" + gattState.get(newState));
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.d(LOG_TAG, "Connected");
@@ -212,8 +219,21 @@ public class BluetoothLeService extends Service {
 
                     Log.d(LOG_TAG, "gattService type: " + type);
                     Log.d(LOG_TAG, "gattService uuid: " + uuid);
+                    Log.d(LOG_TAG, "should match____: " + tessractService.toString());
 
-                    // get characteristic when UUID matches
+                    // Find tessract service and characteristic
+                    if (uuid.equals(tessractService.toString())) {
+                        Log.d(LOG_TAG, "Service Found");
+
+                        bluetoothGattCharacteristic = gattService.getCharacteristic(tessractCharacteristic);
+                        gatt.setCharacteristicNotification(bluetoothGattCharacteristic, true);
+
+                        bluetoothGattDescriptor = bluetoothGattCharacteristic.getDescriptor(tessractDescriptor);
+                        bluetoothGattDescriptor.setValue(bluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                        gatt.writeDescriptor(bluetoothGattDescriptor);
+
+                        BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CHARACTERISTIC);
+                    }
 
                     for (BluetoothGattCharacteristic gattCharacteristic : gattService.getCharacteristics()) {
                         gatt.readCharacteristic(gattCharacteristic);
@@ -560,13 +580,16 @@ public class BluetoothLeService extends Service {
             String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
             Log.d(LOG_TAG, "bluetoothLeReceiver: " + message);
 
-            if (message.equals(Config.INTENT_BLUETOOTH_SCAN)) {
-                BluetoothLeService.this.getBluetoothPaired();
-                BluetoothLeService.this.scanBluetooth();
-            }
             if (message.equals(Config.INTENT_BLUETOOTH_CONNECT)) {
                 String address = intent.getStringExtra(Config.INTENT_EXTRA_DATA);
                 BluetoothLeService.this.connectBluetooth(address);
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_DISCONNECT)) {
+                BluetoothLeService.this.disconnectBluetooth();
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_SCAN)) {
+                BluetoothLeService.this.getBluetoothPaired();
+                BluetoothLeService.this.scanBluetooth();
             }
         }
     };

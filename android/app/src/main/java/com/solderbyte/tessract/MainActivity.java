@@ -12,6 +12,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
@@ -52,15 +53,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     // Progress dialogs
     private static ProgressDialog progressScan = null;
+    private static ProgressDialog progressConnect = null;
     private static int progressScanIterations = 0;
     private static int progressScanIncrement = 10;
     private static int progressScanPeriod = 700;
+
+    // States
+    private static boolean isConnected = false;
 
     // Store
     private static TessractStore store = null;
 
     // TextViews
-    private static TextView textViewState = null;
+    private static TextView textViewDevice = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // UI listeners
         this.createUiListeners();
-        this.restoreUi();
+        this.updateUi();
 
         // Check notification access
         this.checkNotificationAccess();
@@ -218,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         // TextViews
-        textViewState = (TextView) findViewById(R.id.textview_state);
+        textViewDevice = (TextView) findViewById(R.id.textview_device);
 
         // Toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -251,35 +256,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.registerReceiver(bluetoothLeReceiver, new IntentFilter(Config.INTENT_BLUETOOTH));
     }
 
-    private void restoreUi() {
-        Log.d(LOG_TAG, "restoreUi");
-
-        this.restoreDevice();
-    }
-
-    private void restoreDevice() {
-        Log.d(LOG_TAG, "restoreDevice");
-        String name = store.getString(Config.DEVICE_NAME);
-        String address = store.getString(Config.DEVICE_ADDRESS);
-        String state = store.getString(Config.DEVICE_STATE);
-
-        // Set textViewState
-        if (state.equals(store.STRING_DEFAULT)) {
-            state = getString(R.string.textview_state_disconnected);
-        }
-        if (name.equals(store.STRING_DEFAULT)) {
-            String device = getString(R.string.textview_state_default);
-            this.setTextViewState(state, device);
-        }
-        if (!name.equals(store.STRING_DEFAULT)) {
-            deviceName = name;
-            this.setTextViewState(state, deviceName);
-        }
-        if (!address.equals(store.STRING_DEFAULT)) {
-            deviceAddress = address;
-        }
-    }
-
     public void sendIntent(String name, String message) {
         Intent msg = new Intent(name);
         msg.putExtra(Config.INTENT_EXTRA_MSG, message);
@@ -300,6 +276,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.sendBroadcast(msg);
     }
 
+    public void setButtonConnect(boolean value) {
+        Log.d(LOG_TAG, "setButtonConnect: " + value);
+
+        if (value) {
+            buttonConnect.setText(this.getString(R.string.button_disconnect));
+        } else {
+            buttonConnect.setText(this.getString(R.string.button_connect));
+        }
+    }
+
     private void setDevice(String name, String address) {
         Log.d(LOG_TAG, "setDevice: " + name + ":" + address);
         deviceName = name;
@@ -307,14 +293,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         store.setString(Config.DEVICE_NAME, name);
         store.setString(Config.DEVICE_ADDRESS, address);
 
-        this.restoreDevice();
+        this.updateDevice();
     }
 
-    private void setTextViewState(String state, String device) {
-        Log.d(LOG_TAG, "setTextViewState: " + state + ": " + device);
+    private void setDeviceState(boolean value) {
+        Log.d(LOG_TAG, "setDeviceState: " + value);
 
-        if (textViewState != null) {
-            textViewState.setText(state + ": " + device);
+        isConnected = value;
+        store.setBoolean(Config.DEVICE_STATE, value);
+
+        this.updateButton();
+    }
+
+    private void setTextViewDevice(String device) {
+        Log.d(LOG_TAG, "setTextViewDevice: " + device);
+
+        if (textViewDevice != null) {
+            textViewDevice.setText(this.getString(R.string.textview_device) + ": " + device);
         }
     }
 
@@ -350,7 +345,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         if (combinedList.size() == 0) {
             // Devices not found
-            builder.setMessage(getString(R.string.dialog_scan_bt_none));
+            builder.setMessage(this.getString(R.string.dialog_scan_bt_none));
         } else {
             // Devices found
             ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, combinedList);
@@ -363,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             });
 
-            builder.setPositiveButton(getString(R.string.button_select), new DialogInterface.OnClickListener() {
+            builder.setPositiveButton(this.getString(R.string.button_select), new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int index) {
                     int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
@@ -377,7 +372,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             });
         }
 
-        builder.setNegativeButton(getString(R.string.button_close), new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(this.getString(R.string.button_close), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int index) {
                 Log.d(LOG_TAG, "negative:" + index);
@@ -390,11 +385,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dialog.show();
     }
 
+    private void showProgressConnect() {
+        Log.d(LOG_TAG, "showProgressConnecting");
+
+        progressConnect = new ProgressDialog(MainActivity.this);
+        progressConnect.setMessage(this.getString(R.string.progressdialog_connect));
+        progressConnect.setCancelable(false);
+        progressConnect.setButton(DialogInterface.BUTTON_NEUTRAL, this.getString(R.string.button_cancel), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int index) {
+                Log.d(LOG_TAG, "showProgressConnecting: close");
+
+                MainActivity.this.stopProgressConnect();
+            }
+        });
+        progressConnect.show();
+    }
+
     private void showProgressScan() {
         Log.d(LOG_TAG, "showProgressScan");
 
         progressScan = new ProgressDialog(MainActivity.this);
-        progressScan.setMessage(getString(R.string.progressdialog_scan));
+        progressScan.setMessage(this.getString(R.string.progressdialog_scan));
         progressScan.setCancelable(false);
         progressScan.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         progressScan.show();
@@ -403,10 +415,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.startProgressScan();
     }
 
+    private void showSnackbar(String text) {
+        Log.d(LOG_TAG, "showSnackbar: " + text);
+
+        CoordinatorLayout CoordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinator_layout);
+        Snackbar.make(CoordinatorLayout, text, Snackbar.LENGTH_SHORT).setAction("Action", null).show();
+    }
+
+    private  void stopProgressConnect() {
+        Log.d(LOG_TAG, "stopProgressConnect");
+
+        if (progressConnect != null) {
+            progressConnect.dismiss();
+        }
+    }
+
     private void stopProgressScan() {
         Log.d(LOG_TAG, "stopProgressScan");
 
-        if(progressScan != null) {
+        if (progressScan != null) {
             progressScan.dismiss();
         }
     }
@@ -441,20 +468,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    private void updateButton() {
+        Log.d(LOG_TAG, "updateButton");
+        Boolean state = store.getBoolean(Config.DEVICE_STATE);
+
+        this.setButtonConnect(state);
+    }
+
+    private void updateDevice() {
+        Log.d(LOG_TAG, "updateDevice");
+        String name = store.getString(Config.DEVICE_NAME);
+        String address = store.getString(Config.DEVICE_ADDRESS);
+
+        // Set textViewDevice
+        if (name.equals(store.STRING_DEFAULT)) {
+            String device = this.getString(R.string.textview_state_default);
+            this.setTextViewDevice(device);
+        }
+        if (!name.equals(store.STRING_DEFAULT)) {
+            deviceName = name;
+            this.setTextViewDevice(deviceName);
+        }
+        if (!address.equals(store.STRING_DEFAULT)) {
+            deviceAddress = address;
+        }
+    }
+
     private void updateDeviceList(ArrayList<String> list) {
-        Log.d(LOG_TAG, "updateDeviceList: " + list.get(0));
+        Log.d(LOG_TAG, "updateDeviceList: " + list.toString());
         String type;
 
         if (list.get(3).equals(Config.DEVICE_BONDS.get(10))) {
             // BOND_NONE
-            type = getString(R.string.dialog_scan_bt_found);
+            type = this.getString(R.string.dialog_scan_bt_found);
         } else {
             // BOND_BONDED
-            type = getString(R.string.dialog_scan_bt_paired);
+            type = this.getString(R.string.dialog_scan_bt_paired);
         }
 
         combinedList.add(type + ": " + list.get(0));
         deviceList.add(list);
+    }
+
+    private void updateUi() {
+        Log.d(LOG_TAG, "updateUi");
+
+        this.updateDevice();
+        this.updateButton();
     }
 
     private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {
@@ -464,14 +524,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
             Log.d(LOG_TAG, "bluetoothLeReceiver: " + message);
 
-            if (message.equals(Config.INTENT_BLUETOOTH_SCANNED)) {
-                MainActivity.this.stopProgressScan();
-                MainActivity.this.showDialogScan();
+            if (message.equals(Config.INTENT_BLUETOOTH_CONNECTED)) {
+                MainActivity.this.setDeviceState(true);
+                MainActivity.this.stopProgressConnect();
+                MainActivity.this.showSnackbar(MainActivity.this.getString(R.string.snackbar_connected));
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_CONNECTING)) {
+                MainActivity.this.showProgressConnect();
             }
             if (message.equals(Config.INTENT_BLUETOOTH_DEVICE)) {
                 ArrayList<String> list = intent.getStringArrayListExtra(Config.INTENT_EXTRA_DATA);
-                Log.d(LOG_TAG, list.toString());
-                updateDeviceList(list);
+                MainActivity.this.updateDeviceList(list);
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_DISCONNECTED)) {
+                MainActivity.this.setDeviceState(false);
+                MainActivity.this.stopProgressConnect();
+                MainActivity.this.showSnackbar(MainActivity.this.getString(R.string.snackbar_disconnected));
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_SCANNED)) {
+                MainActivity.this.stopProgressScan();
+                MainActivity.this.showDialogScan();
             }
         }
     };
