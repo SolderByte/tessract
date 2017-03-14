@@ -89,8 +89,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.checkPermissions();
 
         // Start service
-        Intent serviceIntent = new Intent(this, TessractService.class);
-        this.startService(serviceIntent);
+        this.startServices();
 
         // Register receivers
         this.registerReceivers();
@@ -234,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Implement me!", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                MainActivity.this.sendIntent(Config.INTENT_APPLICATION, Config.INTENT_APPLICATION_LIST);
             }
         });
 
@@ -252,6 +251,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void registerReceivers() {
         Log.d(LOG_TAG, "registerReceivers");
 
+        this.registerReceiver(applicationReceiver, new IntentFilter(Config.INTENT_APPLICATION));
         this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
         this.registerReceiver(bluetoothLeReceiver, new IntentFilter(Config.INTENT_BLUETOOTH));
     }
@@ -353,7 +353,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             builder.setSingleChoiceItems(arrayAdapter, -1, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int index) {
-                    Log.d(LOG_TAG, "Scanned choice:" + index);
+                    Log.d(LOG_TAG, "Scanned choice: " + index);
 
                 }
             });
@@ -363,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 public void onClick(DialogInterface dialog, int index) {
                     int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
                     ArrayList<String> device = deviceList.get(selectedPosition);
-                    Log.d(LOG_TAG, "positive:" + selectedPosition + ", selected: " + device.toString());
+                    Log.d(LOG_TAG, "Scan positive: " + selectedPosition + ", selected: " + device.toString());
 
                     MainActivity.this.setDevice(device.get(0), device.get(1));
 
@@ -375,7 +375,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setNegativeButton(this.getString(R.string.button_close), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int index) {
-                Log.d(LOG_TAG, "negative:" + index);
+                Log.d(LOG_TAG, "Scan negative: " + index);
 
                 dialog.dismiss();
             }
@@ -422,22 +422,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Snackbar.make(CoordinatorLayout, text, Snackbar.LENGTH_SHORT).setAction("Action", null).show();
     }
 
-    private  void stopProgressConnect() {
-        Log.d(LOG_TAG, "stopProgressConnect");
-
-        if (progressConnect != null) {
-            progressConnect.dismiss();
-        }
-    }
-
-    private void stopProgressScan() {
-        Log.d(LOG_TAG, "stopProgressScan");
-
-        if (progressScan != null) {
-            progressScan.dismiss();
-        }
-    }
-
     private void startProgressScan() {
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
@@ -455,10 +439,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }, progressScanPeriod);
     }
 
+    private void startServices() {
+        Log.d(LOG_TAG, "startServices");
+
+        Intent serviceIntent = new Intent(this, TessractService.class);
+        this.startService(serviceIntent);
+    }
+
+    private  void stopProgressConnect() {
+        Log.d(LOG_TAG, "stopProgressConnect");
+
+        if (progressConnect != null) {
+            progressConnect.dismiss();
+        }
+    }
+
+    private void stopProgressScan() {
+        Log.d(LOG_TAG, "stopProgressScan");
+
+        if (progressScan != null) {
+            progressScan.dismiss();
+        }
+    }
+
     private void unregisterReceivers() {
         Log.d(LOG_TAG, "unregisterReceivers");
 
         try {
+            this.unregisterReceiver(applicationReceiver);
             this.unregisterReceiver(shutdownReceiver);
             this.unregisterReceiver(bluetoothLeReceiver);
         } catch (Exception e) {
@@ -516,6 +524,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.updateDevice();
         this.updateButton();
     }
+
+    private BroadcastReceiver applicationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
+            Log.d(LOG_TAG, "applicationReceiver: " + message);
+
+            if (message.equals(Config.INTENT_APPLICATION_LISTED)) {
+                ArrayList<String> apps = intent.getStringArrayListExtra(Config.INTENT_EXTRA_DATA);
+                Log.d(LOG_TAG, apps.toString());
+            }
+        }
+    };
 
     private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {
 

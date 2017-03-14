@@ -25,14 +25,26 @@ public class Config {
     public static final String INTENT_BLUETOOTH_DISCONNECT = INTENT_BLUETOOTH + ".disconnect";
     public static final String INTENT_BLUETOOTH_DISCONNECTED = INTENT_BLUETOOTH + ".disconnected";
     public static final String INTENT_BLUETOOTH_CHARACTERISTIC = INTENT_BLUETOOTH + ".characteristic";
+
+    public static final String INTENT_NOTIFICATION = INTENT + ".notification";
+
+    public static final String INTENT_APPLICATION = INTENT + ".application";
+    public static final String INTENT_APPLICATION_LIST = INTENT_APPLICATION + ".list";
+    public static final String INTENT_APPLICATION_LISTED = INTENT_APPLICATION + ".listed";
+
     public static final String INTENT_EXTRA_DATA = INTENT + ".extra.data";
     public static final String INTENT_EXTRA_MSG = INTENT + ".extra.message";
+
     public static final String INTENT_SERVICE = INTENT + ".service";
     public static final String INTENT_SERVICE_START = INTENT_SERVICE + ".start";
     public static final String INTENT_SERVICE_STOP = INTENT_SERVICE + ".stop";
     public static final String INTENT_SHUTDOWN = INTENT_SERVICE + ".shutdown";
 
     public static final String INTENT_USER = INTENT + ".user";
+
+    public static final String JSON = PACKAGE + ".json";
+    public static final String JSON_PACKAGE_NAME = "packageName";
+    public static final String JSON_APPLICATION_NAME = "applicationName";
 
     public static HashMap<Integer, String> SERVICE_FLAGS = new HashMap<Integer, String>() {{
         put(0, "START_STICKY_COMPATIBILITY");
