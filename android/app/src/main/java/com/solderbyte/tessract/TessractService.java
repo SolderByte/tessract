@@ -187,7 +187,7 @@ public class TessractService extends Service {
                     json.put(Config.JSON_PACKAGE_NAME, app.packageName);
                     json.put(Config.JSON_APPLICATION_NAME, appName);
                 } catch (JSONException e) {
-                    Log.e(LOG_TAG, "Error: creating JSON" + e);
+                    Log.e(LOG_TAG, "Error: creating JSON " + e);
                     e.printStackTrace();
                 }
                 filteredApplications.add(json.toString());

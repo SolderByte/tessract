@@ -45,6 +45,11 @@ public class Config {
     public static final String JSON = PACKAGE + ".json";
     public static final String JSON_PACKAGE_NAME = "packageName";
     public static final String JSON_APPLICATION_NAME = "applicationName";
+    public static final String JSON_DEVICE_NAME = "deviceName";
+    public static final String JSON_DEVICE_ADDRESS = "deviceAddress";
+    public static final String JSON_DEVICE_TYPE = "deviceType";
+    public static final String JSON_DEVICE_BOND = "deviceBond";
+
 
     public static HashMap<Integer, String> SERVICE_FLAGS = new HashMap<Integer, String>() {{
         put(0, "START_STICKY_COMPATIBILITY");

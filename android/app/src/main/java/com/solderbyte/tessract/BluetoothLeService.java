@@ -24,6 +24,9 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -344,12 +347,18 @@ public class BluetoothLeService extends Service {
                 for (BluetoothDevice device : pairedDevices) {
                     Log.d(LOG_TAG, device.getName() + " : " + device.getAddress() + " : " + deviceTypes.get(device.getType()) + " : " + deviceBonds.get(device.getBondState()));
 
-                    ArrayList<String> list = new ArrayList<String>();
-                    list.add(device.getName());
-                    list.add(device.getAddress());
-                    list.add(deviceTypes.get(device.getType()));
-                    list.add(deviceBonds.get(device.getBondState()));
-                    BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, list);
+                    JSONObject json = new JSONObject();
+                    try {
+                        json.put(Config.JSON_DEVICE_NAME, device.getName());
+                        json.put(Config.JSON_DEVICE_ADDRESS, device.getAddress());
+                        json.put(Config.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
+                        json.put(Config.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
+                    } catch (JSONException e) {
+                        Log.e(LOG_TAG, "Error: creating JSON " + e);
+                        e.printStackTrace();
+                    }
+
+                    BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, json.toString());
                 }
             }
             else {
@@ -516,12 +525,18 @@ public class BluetoothLeService extends Service {
                     return;
                 }
 
-                ArrayList<String> list = new ArrayList<String>();
-                list.add(device.getName());
-                list.add(device.getAddress());
-                list.add(deviceTypes.get(device.getType()));
-                list.add(deviceBonds.get(device.getBondState()));
-                BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, list);
+                JSONObject json = new JSONObject();
+                try {
+                    json.put(Config.JSON_DEVICE_NAME, device.getName());
+                    json.put(Config.JSON_DEVICE_ADDRESS, device.getAddress());
+                    json.put(Config.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
+                    json.put(Config.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
+                } catch (JSONException e) {
+                    Log.e(LOG_TAG, "Error: creating JSON " + e);
+                    e.printStackTrace();
+                }
+
+                BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, json.toString());
             }
         }
     };
@@ -538,12 +553,18 @@ public class BluetoothLeService extends Service {
                     return;
                 }
 
-                ArrayList<String> list = new ArrayList<String>();
-                list.add(device.getName());
-                list.add(device.getAddress());
-                list.add(deviceTypes.get(device.getType()));
-                list.add(deviceBonds.get(device.getBondState()));
-                BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, list);
+                JSONObject json = new JSONObject();
+                try {
+                    json.put(Config.JSON_DEVICE_NAME, device.getName());
+                    json.put(Config.JSON_DEVICE_ADDRESS, device.getAddress());
+                    json.put(Config.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
+                    json.put(Config.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
+                } catch (JSONException e) {
+                    Log.e(LOG_TAG, "Error: creating JSON " + e);
+                    e.printStackTrace();
+                }
+
+                BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, json.toString());
             }
         }
     };
@@ -562,12 +583,18 @@ public class BluetoothLeService extends Service {
                         return;
                     }
 
-                    ArrayList<String> list = new ArrayList<String>();
-                    list.add(device.getName());
-                    list.add(device.getAddress());
-                    list.add(deviceTypes.get(device.getType()));
-                    list.add(deviceBonds.get(device.getBondState()));
-                    BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, list);
+                    JSONObject json = new JSONObject();
+                    try {
+                        json.put(Config.JSON_DEVICE_NAME, device.getName());
+                        json.put(Config.JSON_DEVICE_ADDRESS, device.getAddress());
+                        json.put(Config.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
+                        json.put(Config.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
+                    } catch (JSONException e) {
+                        Log.e(LOG_TAG, "Error: creating JSON " + e);
+                        e.printStackTrace();
+                    }
+
+                    BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, json.toString());
                 }
             }
         }

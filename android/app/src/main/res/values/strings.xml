@@ -17,6 +17,8 @@
     <string name="dialog_scan_bt_none">No devices found</string>
     <string name="dialog_scan_bt_found">Found</string>
     <string name="dialog_scan_bt_paired">Paired</string>
+    <string name="dialog_applications_title">Applications</string>
+    <string name="dialog_applications_add">Add</string>
     <string name="title_activity_delete">deleteActivity</string>
 
     <!-- Navbar -->
