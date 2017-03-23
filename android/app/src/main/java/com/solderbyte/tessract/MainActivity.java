@@ -341,13 +341,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alert.show();
     }
 
-    private void showDialogApplications() {
+    private void showDialogApplications(ArrayAdapterWithIcon adapter) {
         Log.d(LOG_TAG, "showDialogApplications");
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(R.string.dialog_applications_title);
         builder.setCancelable(false);
 
+        if (adapter.isEmpty()) {
+            Log.d(LOG_TAG, "empty");
+        } else {
+            builder.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int index) {
+                    Log.d(LOG_TAG, "App choice: " + index);
+                    dialog.dismiss();
+                }
+            });
+        }
 
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private void showDialogScan() {
@@ -510,9 +523,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 // Get icon
                 PackageManager pm = this.getPackageManager();
                 Drawable icon;
+
                 try {
                     icon = pm.getApplicationIcon(packageName);
-                    icon.setBounds(0, 0, 144, 144);
                 } catch(PackageManager.NameNotFoundException e) {
                     icon = null;
                 }
@@ -524,7 +537,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
-        this.showDialogApplications();
+        ArrayAdapterWithIcon adapter = new ArrayAdapterWithIcon(this, applicationNames, icons);
+
+        this.showDialogApplications(adapter);
     }
 
     private void updateButton() {
