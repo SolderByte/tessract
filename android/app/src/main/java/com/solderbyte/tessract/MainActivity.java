@@ -341,7 +341,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alert.show();
     }
 
-    private void showDialogApplications(ArrayAdapterWithIcon adapter) {
+    private void showDialogApplications(final ArrayAdapterWithIcon adapter) {
         Log.d(LOG_TAG, "showDialogApplications");
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(R.string.dialog_applications_title);
@@ -353,7 +353,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             builder.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int index) {
-                    Log.d(LOG_TAG, "App choice: " + index);
+                    Log.d(LOG_TAG, "App choice: " + adapter.getItem(index));
                     dialog.dismiss();
                 }
             });

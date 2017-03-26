@@ -94,9 +94,6 @@ public class TessractService extends Service {
         // Create package manager
         packageManager = this.getPackageManager();
 
-        // Get list of applications
-        this.listApplications();
-
         this.startForeground(notificationId, notification);
         return super.onStartCommand(intent, flags, startId);
     }

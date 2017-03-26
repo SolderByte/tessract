@@ -2,11 +2,14 @@ package com.solderbyte.tessract;
 
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -32,12 +35,17 @@ public class ArrayAdapterWithIcon extends ArrayAdapter<String> {
             view = convertView;
         }
 
-        Drawable icon = icons.get(position);
+        // Force icon size
+        Drawable i = icons.get(position);
+        Bitmap bitmap = ((BitmapDrawable) i).getBitmap();
+        Drawable icon = new BitmapDrawable(view.getResources(), Bitmap.createScaledBitmap(bitmap, 144, 144, true));
+
+        String appName = items.get(position);
+
+        TextView textView = (TextView) view.findViewById(R.id.dialog_list_text);
+        textView.setText(appName);
 
         ImageView iconView = (ImageView) view.findViewById(R.id.dialog_list_icon);
-        iconView.setAdjustViewBounds(true);
-        iconView.setMaxWidth(iconView.getMaxWidth());
-        iconView.setMaxHeight(iconView.getMaxHeight());
         iconView.setImageDrawable(icon);
 
         return view;
