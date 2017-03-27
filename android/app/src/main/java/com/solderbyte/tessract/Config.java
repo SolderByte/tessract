@@ -43,6 +43,7 @@ public class Config {
     public static final String INTENT_USER = INTENT + ".user";
 
     public static final String JSON = PACKAGE + ".json";
+    public static final String JSON_APPLICATIONS = "applications";
     public static final String JSON_PACKAGE_NAME = "packageName";
     public static final String JSON_APPLICATION_NAME = "applicationName";
     public static final String JSON_DEVICE_NAME = "deviceName";

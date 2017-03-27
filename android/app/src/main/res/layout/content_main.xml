@@ -52,6 +52,7 @@
 
     <!-- List of applications -->
     <ListView
+        android:id="@+id/listview_applications"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"

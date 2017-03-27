@@ -30,8 +30,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -42,6 +44,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Log tag
     private static final String LOG_TAG = "Tessract:Activity";
 
+    // Applications
+    private static ArrayList<String> applicationsList = null;
+    private static ArrayList<String> applicationsSavedList = null;
+
     // Buttons
     private static Button buttonConnect = null;
     private static FloatingActionButton fab = null;
@@ -51,6 +57,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static String deviceAddress = null;
     private static ArrayList<String> combinedList = null;
     private static ArrayList<String> deviceList = null;
+
+    // ListViews
+    private static ListView listViewApplications = null;
 
     // Permission
     private static final int PERMISSION_ACCESS_COARSE_LOCATION = 100;
@@ -149,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         if (id == R.id.nav_scan_bt) {
-            // reset devices array
+            // Reset devices array
             combinedList = new ArrayList<String>();
             deviceList = new ArrayList<String>();
             combinedList.clear();
@@ -225,6 +234,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+        // ListViews
+        listViewApplications = (ListView) findViewById(R.id.listview_applications);
+
         // TextViews
         textViewDevice = (TextView) findViewById(R.id.textview_device);
 
@@ -280,14 +292,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.sendBroadcast(msg);
     }
 
-    public void setButtonConnect(boolean value) {
-        Log.d(LOG_TAG, "setButtonConnect: " + value);
+    private void setApplication(String application) {
+        Log.d(LOG_TAG, "setApplication: " +  application);
 
-        if (value) {
-            buttonConnect.setText(this.getString(R.string.button_disconnect));
-        } else {
-            buttonConnect.setText(this.getString(R.string.button_connect));
+        store.setJSONArray(Config.JSON_APPLICATIONS, application);
+    }
+
+    private void setApplicationsList(ArrayList<String> applications) {
+        Log.d(LOG_TAG, "setApplicationsList: " + applications.toString());
+        applicationsList = applications;
+        ArrayList<String> applicationNames = new ArrayList<String>();
+        ArrayList<Drawable> icons =  new ArrayList<Drawable>();
+
+        for (int i = 0; i < applications.size(); i++) {
+            try {
+                JSONObject json = new JSONObject(applications.get(i));
+                String packageName = json.getString(Config.JSON_PACKAGE_NAME);
+                String applicationName = json.getString(Config.JSON_APPLICATION_NAME);
+                applicationNames.add(applicationName);
+
+                // Get icon
+                PackageManager pm = this.getPackageManager();
+                Drawable icon;
+
+                try {
+                    icon = pm.getApplicationIcon(packageName);
+                } catch(PackageManager.NameNotFoundException e) {
+                    icon = null;
+                }
+
+                icons.add(icon);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, "Error: creating JSON " + e);
+                e.printStackTrace();
+            }
         }
+
+        ArrayAdapterWithIcon adapter = new ArrayAdapterWithIcon(this, applicationNames, icons);
+
+        this.showDialogApplications(adapter);
     }
 
     private void setDevice(String name, String address) {
@@ -300,6 +343,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.updateDevice();
     }
 
+    private void setDeviceList(String list) {
+        Log.d(LOG_TAG, "setDeviceList: " + list);
+
+        try {
+            String type;
+            JSONObject json = new JSONObject(list);
+
+            if (json.get(Config.JSON_DEVICE_BOND).equals(Config.DEVICE_BONDS.get(10))) {
+                // BOND_NONE
+                type = this.getString(R.string.dialog_scan_bt_found);
+            } else {
+                // BOND_BONDED
+                type = this.getString(R.string.dialog_scan_bt_paired);
+            }
+
+            combinedList.add(type + ": " + json.get(Config.JSON_DEVICE_NAME));
+            deviceList.add(list);
+
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: creating JSON " + e);
+            e.printStackTrace();
+        }
+    }
+
     private void setDeviceState(boolean value) {
         Log.d(LOG_TAG, "setDeviceState: " + value);
 
@@ -307,14 +374,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         store.setBoolean(Config.DEVICE_STATE, value);
 
         this.updateButton();
-    }
-
-    private void setTextViewDevice(String device) {
-        Log.d(LOG_TAG, "setTextViewDevice: " + device);
-
-        if (textViewDevice != null) {
-            textViewDevice.setText(this.getString(R.string.textview_device) + ": " + device);
-        }
     }
 
     private void showNotificationAccess() {
@@ -353,11 +412,41 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             builder.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int index) {
-                    Log.d(LOG_TAG, "App choice: " + adapter.getItem(index));
+                    Log.d(LOG_TAG, "App choice: " + index);
+                }
+            });
+
+            builder.setPositiveButton(this.getString(R.string.button_select), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int index) {
+                    int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+                    Log.d(LOG_TAG, "App choice: " + adapter.getItem(selectedPosition));
+                    String obj = applicationsList.get(selectedPosition);
+
+                    if (obj != null) {
+                        try {
+                            JSONObject json = new JSONObject(obj);
+
+                            MainActivity.this.setApplication(json.toString());
+                        } catch (JSONException e) {
+                            Log.e(LOG_TAG, "Error: creating JSON " + e);
+                            e.printStackTrace();
+                        }
+                    }
+
                     dialog.dismiss();
                 }
             });
         }
+
+        builder.setNegativeButton(this.getString(R.string.button_close), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int index) {
+                Log.d(LOG_TAG, "showDialogApplications: close");
+
+                dialog.dismiss();
+            }
+        });
 
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -380,7 +469,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 @Override
                 public void onClick(DialogInterface dialog, int index) {
                     Log.d(LOG_TAG, "Scanned choice: " + index);
-
                 }
             });
 
@@ -407,7 +495,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setNegativeButton(this.getString(R.string.button_close), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int index) {
-                Log.d(LOG_TAG, "Scan negative: " + index);
+                Log.d(LOG_TAG, "showDialogScan: close");
 
                 dialog.dismiss();
             }
@@ -508,45 +596,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private void updateApplications(ArrayList<String> applications) {
-        Log.d(LOG_TAG, "updateApplications: " + applications.toString());
-        ArrayList<String> applicationNames = new ArrayList<String>();
-        ArrayList<Drawable> icons =  new ArrayList<Drawable>();
+    private void updateApplications() {
+        Log.d(LOG_TAG, "updateApplications");
+        String stored = store.getJSONArray(Config.JSON_APPLICATIONS);
+        ArrayList<String> applications = new ArrayList<>();
+        JSONArray json;
 
-        for (int i = 0; i < applications.size(); i++) {
-            try {
-                JSONObject json = new JSONObject(applications.get(i));
-                String packageName = json.getString(Config.JSON_PACKAGE_NAME);
-                String applicationName = json.getString(Config.JSON_APPLICATION_NAME);
-                applicationNames.add(applicationName);
+        try {
+            json = new JSONArray(stored);
 
-                // Get icon
-                PackageManager pm = this.getPackageManager();
-                Drawable icon;
-
-                try {
-                    icon = pm.getApplicationIcon(packageName);
-                } catch(PackageManager.NameNotFoundException e) {
-                    icon = null;
-                }
-
-                icons.add(icon);
-            } catch (JSONException e) {
-                Log.e(LOG_TAG, "Error: creating JSON " + e);
-                e.printStackTrace();
+            for (int i = 0; i < json.length(); i++) {
+                String obj = json.get(i).toString();
+                applications.add(obj);
             }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: creating JSON " + e);
+            e.printStackTrace();
         }
 
-        ArrayAdapterWithIcon adapter = new ArrayAdapterWithIcon(this, applicationNames, icons);
-
-        this.showDialogApplications(adapter);
+        Log.d(LOG_TAG, applications.toString());
     }
 
     private void updateButton() {
         Log.d(LOG_TAG, "updateButton");
         Boolean state = store.getBoolean(Config.DEVICE_STATE);
 
-        this.setButtonConnect(state);
+        this.updateButtonConnect(state);
+    }
+
+    public void updateButtonConnect(boolean value) {
+        Log.d(LOG_TAG, "updateButtonConnect: " + value);
+
+        if (value) {
+            buttonConnect.setText(this.getString(R.string.button_disconnect));
+        } else {
+            buttonConnect.setText(this.getString(R.string.button_connect));
+        }
     }
 
     private void updateDevice() {
@@ -557,46 +642,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Set textViewDevice
         if (name.equals(store.STRING_DEFAULT)) {
             String device = this.getString(R.string.textview_state_default);
-            this.setTextViewDevice(device);
+            this.updateTextViewDevice(device);
         }
         if (!name.equals(store.STRING_DEFAULT)) {
             deviceName = name;
-            this.setTextViewDevice(deviceName);
+            this.updateTextViewDevice(deviceName);
         }
         if (!address.equals(store.STRING_DEFAULT)) {
             deviceAddress = address;
         }
     }
 
-    private void updateDeviceList(String list) {
-        Log.d(LOG_TAG, "updateDeviceList: " + list);
+    private void updateTextViewDevice(String device) {
+        Log.d(LOG_TAG, "updateTextViewDevice: " + device);
 
-        try {
-            String type;
-            JSONObject json = new JSONObject(list);
-
-            if (json.get(Config.JSON_DEVICE_BOND).equals(Config.DEVICE_BONDS.get(10))) {
-                // BOND_NONE
-                type = this.getString(R.string.dialog_scan_bt_found);
-            } else {
-                // BOND_BONDED
-                type = this.getString(R.string.dialog_scan_bt_paired);
-            }
-
-            combinedList.add(type + ": " + json.get(Config.JSON_DEVICE_NAME));
-            deviceList.add(list);
-
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Error: creating JSON " + e);
-            e.printStackTrace();
+        if (textViewDevice != null) {
+            textViewDevice.setText(this.getString(R.string.textview_device) + ": " + device);
         }
     }
 
     private void updateUi() {
         Log.d(LOG_TAG, "updateUi");
 
-        this.updateDevice();
+        this.updateApplications();
         this.updateButton();
+        this.updateDevice();
     }
 
     private BroadcastReceiver applicationReceiver = new BroadcastReceiver() {
@@ -607,7 +677,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             if (message.equals(Config.INTENT_APPLICATION_LISTED)) {
                 ArrayList<String> apps = intent.getStringArrayListExtra(Config.INTENT_EXTRA_DATA);
-                MainActivity.this.updateApplications(apps);
+                MainActivity.this.setApplicationsList(apps);
             }
         }
     };
@@ -629,7 +699,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             if (message.equals(Config.INTENT_BLUETOOTH_DEVICE)) {
                 String list = intent.getStringExtra(Config.INTENT_EXTRA_DATA);
-                MainActivity.this.updateDeviceList(list);
+                MainActivity.this.setDeviceList(list);
             }
             if (message.equals(Config.INTENT_BLUETOOTH_DISCONNECTED)) {
                 MainActivity.this.setDeviceState(false);
