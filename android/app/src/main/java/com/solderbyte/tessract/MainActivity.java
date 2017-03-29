@@ -28,6 +28,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -452,6 +453,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dialog.show();
     }
 
+    private void showDialogColorPicker() {
+        Log.d(LOG_TAG, "showDialogColorPicker");
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setCancelable(false);
+
+        builder.setPositiveButton(this.getString(R.string.button_select), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        builder.setNegativeButton(this.getString(R.string.button_cancel), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        builder.setView(R.layout.dialog_color_picker);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
     private void showDialogScan() {
         Log.d(LOG_TAG, "showDialogScan");
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -613,6 +638,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.e(LOG_TAG, "Error: creating JSON " + e);
             e.printStackTrace();
         }
+
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, applications);
+
+        listViewApplications.setAdapter(arrayAdapter);
+
+        listViewApplications.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(LOG_TAG, "Selected: " + position + " " + id);
+
+                MainActivity.this.showDialogColorPicker();
+            }
+        });
+
+        listViewApplications.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(LOG_TAG, "Long Selected: " + position + " " + id);
+                return true;
+            }
+        });
 
         Log.d(LOG_TAG, applications.toString());
     }

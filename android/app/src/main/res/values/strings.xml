@@ -10,6 +10,12 @@
     <string name="button_select">Select</string>
     <string name="button_cancel">Cancel</string>
 
+    <!-- Color picker -->
+    <string name="seekbar_red">R</string>
+    <string name="seekbar_green">G</string>
+    <string name="seekbar_blue">B</string>
+    <string name="seekbar_hex">#</string>
+
     <!-- Dialog text -->
     <string name="dialog_notification_access_title">Enable Notification Access</string>
     <string name="dialog_notification_access_message">In order to receive application notifications, you must enable notification access for Tessract.</string>
@@ -47,7 +53,6 @@
     <string name="snackbar_connected">Connected</string>
     <string name="snackbar_disconnected">Disconnected</string>
 
-
     <!-- TextViews -->
     <string name="textview_applications">Applications</string>
     <string name="textview_device">Device</string>
@@ -55,4 +60,5 @@
 
     <!-- Toolbar -->
     <string name="action_settings">Settings</string>
+
 </resources>
