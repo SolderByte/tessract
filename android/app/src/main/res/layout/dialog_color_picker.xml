@@ -7,13 +7,14 @@
     android:weightSum="1">
 
     <View
-        android:id="@+id/colorView"
+        android:id="@+id/view_color"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:background="@color/colorPrimary"
         android:paddingBottom="16dip"/>
 
     <RelativeLayout
+        android:id="@+id/colorpicker_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -35,10 +36,11 @@
             android:layout_height="wrap_content"
             android:textColor="@android:color/holo_red_light"
             android:max="255"
+            android:progress="63"
             android:padding="16dip"
             android:layout_alignParentTop="true"
             android:layout_toEndOf="@+id/textview_red"
-            android:layout_toStartOf="@+id/edittext_red"/>
+            android:layout_toStartOf="@+id/edittext_red" />
 
         <EditText
             android:id="@+id/edittext_red"
@@ -47,6 +49,9 @@
             android:inputType="number"
             android:maxLength="3"
             android:ems="3"
+            android:text="63"
+            android:imeOptions="actionDone"
+            android:background="@null"
             android:layout_alignParentTop="true"
             android:layout_alignParentEnd="true"
             android:padding="16dip"
@@ -71,6 +76,7 @@
             android:layout_height="wrap_content"
             android:textColor="@android:color/holo_green_light"
             android:max="255"
+            android:progress="81"
             android:padding="16dip"
             android:layout_below="@+id/seekbar_red"
             android:layout_toStartOf="@+id/edittext_green"
@@ -83,6 +89,9 @@
             android:inputType="number"
             android:maxLength="3"
             android:ems="3"
+            android:text="81"
+            android:imeOptions="actionDone"
+            android:background="@null"
             android:padding="16dip"
             android:layout_below="@+id/edittext_red"
             android:layout_alignParentEnd="true"
@@ -107,6 +116,7 @@
             android:layout_height="wrap_content"
             android:textColor="@android:color/holo_green_light"
             android:max="255"
+            android:progress="181"
             android:padding="16dip"
             android:layout_below="@+id/seekbar_green"
             android:layout_toStartOf="@+id/edittext_blue"
@@ -119,6 +129,9 @@
             android:inputType="number"
             android:maxLength="3"
             android:ems="3"
+            android:text="181"
+            android:imeOptions="actionDone"
+            android:background="@null"
             android:padding="16dip"
             android:layout_below="@+id/edittext_green"
             android:layout_alignParentEnd="true"
@@ -143,6 +156,8 @@
             android:layout_height="wrap_content"
             android:inputType="textPersonName"
             android:ems="6"
+            android:text="3F51B5"
+            android:imeOptions="actionDone"
             android:padding="16dip"
             android:layout_below="@+id/seekbar_blue"
             android:layout_toEndOf="@+id/textview_hex"

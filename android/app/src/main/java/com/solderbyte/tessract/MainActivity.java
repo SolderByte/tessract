@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -28,10 +30,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -455,6 +460,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void showDialogColorPicker() {
         Log.d(LOG_TAG, "showDialogColorPicker");
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View layout = inflater.inflate(R.layout.dialog_color_picker, (ViewGroup) findViewById(R.id.colorpicker_layout));
+        View viewColor = null;
+
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setCancelable(false);
 
@@ -472,9 +481,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        builder.setView(R.layout.dialog_color_picker);
+        builder.setView(layout);
         AlertDialog dialog = builder.create();
         dialog.show();
+
+        viewColor = layout.findViewById(R.id.view_color);
+        SeekBar seekBarRed = (SeekBar) layout.findViewById(R.id.seekbar_red);
+        SeekBar seekBarGreen = (SeekBar) layout.findViewById(R.id.seekbar_green);
+        SeekBar seekBarBlue = (SeekBar) layout.findViewById(R.id.seekbar_blue);
+        EditText editTextRed = (EditText) layout.findViewById(R.id.edittext_red);
+        EditText editTextGreen = (EditText) layout.findViewById(R.id.edittext_green);
+        EditText editTextBlue = (EditText) layout.findViewById(R.id.edittext_blue);
+        EditText editTextHex = (EditText) layout.findViewById(R.id.edittext_hex);
+
+        this.updateColorPicker(viewColor, seekBarRed, seekBarGreen, seekBarBlue, editTextRed, editTextGreen, editTextBlue , editTextHex);
+    }
+
+    private void updateColorPicker(View viewColor, SeekBar seekBarRed, SeekBar seekBarGreen, SeekBar seekBarBlue, EditText editTextRed, EditText editTextGreen, EditText editTextBlue, EditText editTextHex) {
+        Log.d(LOG_TAG, "showDialogColorPicker");
+
+        this.updateColorPickerSeekbar(seekBarRed, editTextRed);
+        this.updateColorPickerSeekbar(seekBarGreen,editTextGreen);
+        this.updateColorPickerSeekbar(seekBarBlue, editTextBlue);
+    }
+
+    private void updateColorPickerSeekbar(SeekBar seekBar, final EditText editText) {
+        Log.d(LOG_TAG, "updateSeekbar");
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                //Log.v(LOG_TAG, "onProgressChanged: " + progress);
+                MainActivity.this.updateColorPickerEditText(seekBar, editText, progress);
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+    }
+
+    private void updateColorPickerEditText(SeekBar seekBar, EditText editText, int progress) {
+        Log.d(LOG_TAG, "updateColorPickerEditText");
+
+        editText.setText(Integer.toString(progress));
     }
 
     private void showDialogScan() {
