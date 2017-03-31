@@ -19,6 +19,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -57,6 +59,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Buttons
     private static Button buttonConnect = null;
     private static FloatingActionButton fab = null;
+
+    // Color picker
+    private static ArrayList<Integer> colors = null;
+    private static ArrayList<SeekBar> seekBars = null;
+    private static ArrayList<EditText> editTexts = null;
 
     // Device
     private static String deviceName = null;
@@ -462,6 +469,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Log.d(LOG_TAG, "showDialogColorPicker");
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View layout = inflater.inflate(R.layout.dialog_color_picker, (ViewGroup) findViewById(R.id.colorpicker_layout));
+        colors = new ArrayList<Integer>() {{
+            add(63);
+            add(81);
+            add(181);
+        }};
+        seekBars = new ArrayList<SeekBar>();
+        editTexts = new ArrayList<EditText>();
         View viewColor = null;
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -470,6 +484,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setPositiveButton(this.getString(R.string.button_select), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                Log.d(LOG_TAG, "Selected color: " + colors.get(Config.COLOR_RED) + " " + colors.get(Config.COLOR_GREEN) + " " + colors.get(Config.COLOR_BLUE));
                 dialog.dismiss();
             }
         });
@@ -494,37 +509,89 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditText editTextBlue = (EditText) layout.findViewById(R.id.edittext_blue);
         EditText editTextHex = (EditText) layout.findViewById(R.id.edittext_hex);
 
-        this.updateColorPicker(viewColor, seekBarRed, seekBarGreen, seekBarBlue, editTextRed, editTextGreen, editTextBlue , editTextHex);
+        seekBars.add(seekBarRed);
+        seekBars.add(seekBarGreen);
+        seekBars.add(seekBarBlue);
+        editTexts.add(editTextRed);
+        editTexts.add(editTextGreen);
+        editTexts.add(editTextBlue);
+
+        this.updateColorPicker(viewColor, seekBarRed, editTextRed, editTextHex, Config.COLOR_RED);
+        this.updateColorPicker(viewColor, seekBarGreen,editTextGreen, editTextHex, Config.COLOR_GREEN);
+        this.updateColorPicker(viewColor, seekBarBlue, editTextBlue, editTextHex, Config.COLOR_BLUE);;
     }
 
-    private void updateColorPicker(View viewColor, SeekBar seekBarRed, SeekBar seekBarGreen, SeekBar seekBarBlue, EditText editTextRed, EditText editTextGreen, EditText editTextBlue, EditText editTextHex) {
-        Log.d(LOG_TAG, "showDialogColorPicker");
-
-        this.updateColorPickerSeekbar(seekBarRed, editTextRed);
-        this.updateColorPickerSeekbar(seekBarGreen,editTextGreen);
-        this.updateColorPickerSeekbar(seekBarBlue, editTextBlue);
-    }
-
-    private void updateColorPickerSeekbar(SeekBar seekBar, final EditText editText) {
-        Log.d(LOG_TAG, "updateSeekbar");
+    private void updateColorPicker(final View viewColor, SeekBar seekBar, EditText editText, final EditText editTextHex, final int index) {
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                //Log.v(LOG_TAG, "onProgressChanged: " + progress);
-                MainActivity.this.updateColorPickerEditText(seekBar, editText, progress);
+                colors.set(index, progress);
+                editTexts.get(index).setText(Integer.toString(progress));
+                MainActivity.this.updateColorPickerHex(editTextHex);
+                MainActivity.this.updateColorPickerView(viewColor);
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                try {
+                    seekBars.get(index).setProgress(Integer.parseInt(s.toString()));
+                }  catch (Exception e) {
+                    Log.w(LOG_TAG, "Error: parsing integer" + e);
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        editTextHex.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                try {
+                    int color = Color.parseColor("#" + s.toString());
+                    seekBars.get(Config.COLOR_RED).setProgress(Color.red(color));
+                    seekBars.get(Config.COLOR_GREEN).setProgress(Color.green(color));
+                    seekBars.get(Config.COLOR_BLUE).setProgress(Color.blue(color));
+
+                } catch (Exception e) {
+                    Log.w(LOG_TAG, "Error: parsing color" + e);
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
     }
 
-    private void updateColorPickerEditText(SeekBar seekBar, EditText editText, int progress) {
-        Log.d(LOG_TAG, "updateColorPickerEditText");
+    private void updateColorPickerHex(EditText editTextHex) {
+        String red = Integer.toHexString(colors.get(Config.COLOR_RED));
+        String green = Integer.toHexString(colors.get(Config.COLOR_GREEN));
+        String blue = Integer.toHexString(colors.get(Config.COLOR_BLUE));
 
-        editText.setText(Integer.toString(progress));
+        if (red.length() < 2) {
+            red = "0" + red;
+        }
+        if (green.length() < 2) {
+            green = "0" + green;
+        }
+        if (blue.length() < 2) {
+            blue = "0" + blue;
+        }
+
+        editTextHex.setText(red + green + blue);
+    }
+
+    private void updateColorPickerView(View viewColor) {
+        viewColor.setBackgroundColor(Color.rgb(colors.get(Config.COLOR_RED), colors.get(Config.COLOR_GREEN), colors.get(Config.COLOR_BLUE)));
     }
 
     private void showDialogScan() {

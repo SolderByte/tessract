@@ -156,13 +156,13 @@
             android:layout_height="wrap_content"
             android:inputType="textPersonName"
             android:ems="6"
+            android:maxLength="6"
             android:text="3F51B5"
             android:imeOptions="actionDone"
             android:padding="16dip"
             android:layout_below="@+id/seekbar_blue"
             android:layout_toEndOf="@+id/textview_hex"
-            android:layout_alignBottom="@+id/textview_hex"
-            android:maxLength="6" />
+            android:layout_alignBottom="@+id/textview_hex" />
     </RelativeLayout>
 
 </LinearLayout>

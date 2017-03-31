@@ -51,6 +51,11 @@ public class Config {
     public static final String JSON_DEVICE_TYPE = "deviceType";
     public static final String JSON_DEVICE_BOND = "deviceBond";
 
+    public static final int COLOR_RED = 0;
+    public static final int COLOR_GREEN = 1;
+    public static final int COLOR_BLUE = 2;
+
+
 
     public static HashMap<Integer, String> SERVICE_FLAGS = new HashMap<Integer, String>() {{
         put(0, "START_STICKY_COMPATIBILITY");
