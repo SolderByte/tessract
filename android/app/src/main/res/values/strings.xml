@@ -9,6 +9,7 @@
     <string name="button_close">Close</string>
     <string name="button_select">Select</string>
     <string name="button_cancel">Cancel</string>
+    <string name="button_remove">Remove</string>
 
     <!-- Color picker -->
     <string name="seekbar_red">R</string>
@@ -25,6 +26,7 @@
     <string name="dialog_scan_bt_paired">Paired</string>
     <string name="dialog_applications_title">Applications</string>
     <string name="dialog_applications_add">Add</string>
+    <string name="dialog_applications_remove_title">Remove Application</string>
     <string name="title_activity_delete">deleteActivity</string>
 
     <!-- Navbar -->

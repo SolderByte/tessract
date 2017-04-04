@@ -46,6 +46,7 @@ public class Config {
     public static final String JSON_APPLICATIONS = "applications";
     public static final String JSON_PACKAGE_NAME = "packageName";
     public static final String JSON_APPLICATION_NAME = "applicationName";
+    public static final String JSON_APPLICATION_COLOR = "applicationColor";
     public static final String JSON_DEVICE_NAME = "deviceName";
     public static final String JSON_DEVICE_ADDRESS = "deviceAddress";
     public static final String JSON_DEVICE_TYPE = "deviceType";
@@ -54,6 +55,7 @@ public class Config {
     public static final int COLOR_RED = 0;
     public static final int COLOR_GREEN = 1;
     public static final int COLOR_BLUE = 2;
+    public static final int COLOR_DEFAULT = -12627531;
 
 
 
