@@ -36,6 +36,31 @@ public class TessractStore {
         editor = preferences.edit();
     }
 
+    public void deleteJSONArray(String key, int index) {
+        ArrayList<String> jsonArray = new ArrayList<>();
+        String stored = this.getJSONArray(key);
+        JSONArray jsonStored;
+
+        try {
+            jsonStored = new JSONArray(stored);
+
+            if (index > jsonStored.length()) {
+                return;
+            }
+            jsonStored.remove(index);
+
+            for (int i = 0; i < jsonStored.length(); i++) {
+                String old = jsonStored.get(i).toString();
+                jsonArray.add(old);
+            }
+        } catch (JSONException e) {
+
+        }
+
+        editor.putString(key + ":jsonarray", jsonArray.toString());
+        editor.commit();
+    }
+
     public boolean getBoolean(String key) {
         boolean value = preferences.getBoolean(key + ":boolean", BOOEAN_DEFAULT);
         return value;
@@ -103,6 +128,31 @@ public class TessractStore {
 
     public void setString(String key, String value) {
         editor.putString(key + ":string", value);
+        editor.commit();
+    }
+
+    public void updateJSONArray(String key, String json, int index) {
+        ArrayList<String> jsonArray = new ArrayList<>();
+        String stored = this.getJSONArray(key);
+        JSONArray jsonStored;
+
+        try {
+            jsonStored = new JSONArray(stored);
+
+            if (index > jsonStored.length()) {
+                return;
+            }
+            jsonStored.put(index, json);
+
+            for (int i = 0; i < jsonStored.length(); i++) {
+                String old = jsonStored.get(i).toString();
+                jsonArray.add(old);
+            }
+        } catch (JSONException e) {
+
+        }
+
+        editor.putString(key + ":jsonarray", jsonArray.toString());
         editor.commit();
     }
 }

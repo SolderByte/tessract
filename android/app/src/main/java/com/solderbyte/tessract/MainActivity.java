@@ -277,6 +277,63 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
     }
 
+    private void deleteApplicationByIndex(int index) {
+        Log.d(LOG_TAG, "deleteApplication: " + index);
+
+        store.deleteJSONArray(Config.JSON_APPLICATIONS, index);
+        this.updateUi();
+    }
+
+    private JSONArray getApplications() {
+        Log.d(LOG_TAG, "getApplications");
+        String stored = store.getJSONArray(Config.JSON_APPLICATIONS);
+        JSONArray json =  new JSONArray();
+
+        try {
+            json = new JSONArray(stored);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: creating JSON " + e);
+            e.printStackTrace();
+        }
+
+        return json;
+    }
+
+    private JSONObject getApplicationByIndex(int index) {
+        Log.d(LOG_TAG, "getApplicationByIndex");
+        JSONArray json = this.getApplications();
+        JSONObject app =  new JSONObject();
+
+        try {
+            if (index > json.length()) {
+                return null;
+            }
+
+            app = new JSONObject(json.get(index).toString());
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: getting JSON by index" + e);
+            e.printStackTrace();
+        }
+
+
+        return app;
+    }
+
+    private Drawable getApplicationIcon(String packageName) {
+        Log.d(LOG_TAG, "getApplicationIcon: " + packageName);
+        // Get icon
+        PackageManager pm = this.getPackageManager();
+        Drawable icon;
+
+        try {
+            icon = pm.getApplicationIcon(packageName);
+        } catch(PackageManager.NameNotFoundException e) {
+            icon = null;
+        }
+
+        return icon;
+    }
+
     private void registerReceivers() {
         Log.d(LOG_TAG, "registerReceivers");
 
@@ -305,10 +362,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.sendBroadcast(msg);
     }
 
-    private void setApplication(String application) {
-        Log.d(LOG_TAG, "setApplication: " +  application);
+    private void setApplications(String applications) {
+        Log.d(LOG_TAG, "setApplications: " +  applications);
 
-        store.setJSONArray(Config.JSON_APPLICATIONS, application);
+        store.setJSONArray(Config.JSON_APPLICATIONS, applications);
+        this.updateUi();
+    }
+
+    private void setApplicationsByIndex(String applications, int index) {
+        Log.d(LOG_TAG, "setApplicationsByIndex: " +  applications + " " + index);
+
+        store.updateJSONArray(Config.JSON_APPLICATIONS, applications, index);
+        this.updateUi();
     }
 
     private void setApplicationsList(ArrayList<String> applications) {
@@ -317,23 +382,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ArrayList<String> applicationNames = new ArrayList<String>();
         ArrayList<Drawable> icons =  new ArrayList<Drawable>();
 
-        for (int i = 0; i < applications.size(); i++) {
+        for (int i = 0; i < applicationsList.size(); i++) {
             try {
-                JSONObject json = new JSONObject(applications.get(i));
+                // Get application and package names
+                JSONObject json = new JSONObject(applicationsList.get(i));
                 String packageName = json.getString(Config.JSON_PACKAGE_NAME);
                 String applicationName = json.getString(Config.JSON_APPLICATION_NAME);
                 applicationNames.add(applicationName);
 
                 // Get icon
-                PackageManager pm = this.getPackageManager();
-                Drawable icon;
-
-                try {
-                    icon = pm.getApplicationIcon(packageName);
-                } catch(PackageManager.NameNotFoundException e) {
-                    icon = null;
-                }
-
+                Drawable icon = this.getApplicationIcon(packageName);
                 icons.add(icon);
             } catch (JSONException e) {
                 Log.e(LOG_TAG, "Error: creating JSON " + e);
@@ -341,6 +399,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
+        // Create an adapter with icons
         ArrayAdapterWithIcon adapter = new ArrayAdapterWithIcon(this, applicationNames, icons);
 
         this.showDialogApplications(adapter);
@@ -398,13 +457,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         dialog.setPositiveButton(R.string.button_open, new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int index) {
+            public void onClick(DialogInterface dialog, int which) {
                 Log.d(LOG_TAG, "showDialogNotificationAccess: open");
                 startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
             }
         });
         dialog.setNegativeButton(R.string.button_close, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int index) {
+            public void onClick(DialogInterface dialog, int which) {
                 Log.d(LOG_TAG, "showDialogNotificationAccess: close");
             }
         });
@@ -420,27 +479,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setCancelable(false);
 
         if (adapter.isEmpty()) {
-            Log.d(LOG_TAG, "empty");
+            Log.d(LOG_TAG, "showDialogApplications empty adapter");
         } else {
+            // Set the adapter
             builder.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
                 @Override
-                public void onClick(DialogInterface dialog, int index) {
-                    Log.d(LOG_TAG, "App choice: " + index);
-                }
+                public void onClick(DialogInterface dialog, int which) {}
             });
 
             builder.setPositiveButton(this.getString(R.string.button_select), new DialogInterface.OnClickListener() {
                 @Override
-                public void onClick(DialogInterface dialog, int index) {
+                public void onClick(DialogInterface dialog, int which) {
+                    // Get the position of selected app
                     int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
-                    Log.d(LOG_TAG, "App choice: " + adapter.getItem(selectedPosition));
-                    String obj = applicationsList.get(selectedPosition);
+                    Log.d(LOG_TAG, "showDialogApplications: " + adapter.getItem(selectedPosition));
+                    String app = applicationsList.get(selectedPosition);
 
-                    if (obj != null) {
+                    if (app != null) {
                         try {
-                            JSONObject json = new JSONObject(obj);
+                            // Create JSON and set default color for app
+                            JSONObject json = new JSONObject(app);
+                            json.put(Config.JSON_APPLICATION_COLOR, Config.COLOR_DEFAULT);
 
-                            MainActivity.this.setApplication(json.toString());
+                            MainActivity.this.setApplications(json.toString());
                         } catch (JSONException e) {
                             Log.e(LOG_TAG, "Error: creating JSON " + e);
                             e.printStackTrace();
@@ -454,7 +515,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         builder.setNegativeButton(this.getString(R.string.button_close), new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int index) {
+            public void onClick(DialogInterface dialog, int which) {
                 Log.d(LOG_TAG, "showDialogApplications: close");
 
                 dialog.dismiss();
@@ -465,14 +526,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dialog.show();
     }
 
-    private void showDialogColorPicker(final int position) {
+    private void showDialogColorPicker(final int index) {
         Log.d(LOG_TAG, "showDialogColorPicker");
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View layout = inflater.inflate(R.layout.dialog_color_picker, (ViewGroup) findViewById(R.id.colorpicker_layout));
+        int color = Config.COLOR_DEFAULT;
+
+        // Get application
+        JSONObject app = this.getApplicationByIndex(index);
+
+        try {
+            color = app.getInt(Config.JSON_APPLICATION_COLOR);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: getting JSON " + e);
+            e.printStackTrace();
+        }
+
+        // Set color
+        final int red = Color.red(color);
+        final int green = Color.green(color);
+        final int blue = Color.blue(color);
         colors = new ArrayList<Integer>() {{
-            add(63);
-            add(81);
-            add(181);
+            add(red);
+            add(green);
+            add(blue);
         }};
         seekBars = new ArrayList<SeekBar>();
         editTexts = new ArrayList<EditText>();
@@ -484,24 +561,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setPositiveButton(this.getString(R.string.button_select), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Log.d(LOG_TAG, "Selected color: " + colors.get(Config.COLOR_RED) + " " + colors.get(Config.COLOR_GREEN) + " " + colors.get(Config.COLOR_BLUE));
+                Log.d(LOG_TAG, "showDialogColorPicker: " + colors.get(Config.COLOR_RED) + " " + colors.get(Config.COLOR_GREEN) + " " + colors.get(Config.COLOR_BLUE));
 
                 int color = Color.rgb(colors.get(Config.COLOR_RED), colors.get(Config.COLOR_GREEN), colors.get(Config.COLOR_BLUE));
 
-                String stored = store.getJSONArray(Config.JSON_APPLICATIONS);
                 ArrayList<String> applications =  new ArrayList<>();
-                JSONArray json;
+                JSONObject app = MainActivity.this.getApplicationByIndex(index);
 
                 try {
-                    json = new JSONArray(stored);
-                    JSONObject obj = new JSONObject(json.get(position).toString());
-                    obj.put(Config.JSON_APPLICATION_COLOR, color);
-                    Log.d(LOG_TAG, "apps: " + obj.toString());
+                    app.put(Config.JSON_APPLICATION_COLOR, color);
 
-//                    for (int i = 0; i < json.length(); i++) {
-//                        String obj = json.get(i).toString();
-//                        applications.add(obj);
-//                    }
+                    MainActivity.this.setApplicationsByIndex(app.toString(), index);
                 } catch (JSONException e) {
                     Log.e(LOG_TAG, "Error: creating JSON " + e);
                     e.printStackTrace();
@@ -514,14 +584,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         builder.setNegativeButton(this.getString(R.string.button_cancel), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                Log.d(LOG_TAG, "showDialogColorPicker: cancel");
+
                 dialog.dismiss();
             }
         });
 
+        // Create dialog
         builder.setView(layout);
         AlertDialog dialog = builder.create();
         dialog.show();
 
+        // Get layout elements
         viewColor = layout.findViewById(R.id.view_color);
         SeekBar seekBarRed = (SeekBar) layout.findViewById(R.id.seekbar_red);
         SeekBar seekBarGreen = (SeekBar) layout.findViewById(R.id.seekbar_green);
@@ -538,26 +612,64 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         editTexts.add(editTextGreen);
         editTexts.add(editTextBlue);
 
+        // Restore previous color
+        this.updateColorPickerView(viewColor);
+        this.updateColorPickerHex(editTextHex);
+        this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_RED), red);
+        this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_GREEN), green);
+        this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_BLUE), blue);
+        this.updateColorPickerEditText(editTexts.get(Config.COLOR_RED), red);
+        this.updateColorPickerEditText(editTexts.get(Config.COLOR_GREEN), green);
+        this.updateColorPickerEditText(editTexts.get(Config.COLOR_BLUE), blue);
+
+        // Set color picker listener
         this.updateColorPicker(viewColor, seekBarRed, editTextRed, editTextHex, Config.COLOR_RED);
         this.updateColorPicker(viewColor, seekBarGreen,editTextGreen, editTextHex, Config.COLOR_GREEN);
         this.updateColorPicker(viewColor, seekBarBlue, editTextBlue, editTextHex, Config.COLOR_BLUE);;
     }
 
-    private void showDialogRemoveApplication(int position) {
-        Log.d(LOG_TAG, "showDialogRemoveApplication: " + position);
+    private void showDialogRemoveApplication(final int index) {
+        Log.d(LOG_TAG, "showDialogRemoveApplication: " + index);
+        ArrayList<String> applicationNames = new ArrayList<String>();
+        ArrayList<Drawable> icons = new ArrayList<Drawable>();
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setTitle(R.string.dialog_applications_remove_title);
-        builder.setMessage("app name ?");
         builder.setCancelable(false);
+
+        // Get application
+        JSONObject app = this.getApplicationByIndex(index);
+
+        try {
+            String applicationName = app.getString(Config.JSON_APPLICATION_NAME);
+            String packageName = app.getString(Config.JSON_PACKAGE_NAME);
+
+            Drawable icon = this.getApplicationIcon(packageName);
+
+            applicationNames.add(applicationName);
+            icons.add(icon);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: getting JSON " + e);
+            e.printStackTrace();
+        }
+
+        // Create an adapter with icons
+        ArrayAdapterWithIcon adapter = new ArrayAdapterWithIcon(this, applicationNames, icons);
+
+        builder.setSingleChoiceItems(adapter, -1, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {}
+        });
 
         builder.setPositiveButton(R.string.button_remove, new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int index) {
+            public void onClick(DialogInterface dialog, int which) {
                 Log.d(LOG_TAG, "showDialogRemoveApplication: remove");
+
+                MainActivity.this.deleteApplicationByIndex(index);
             }
         });
         builder.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int index) {
+            public void onClick(DialogInterface dialog, int which) {
                 Log.d(LOG_TAG, "showDialogRemoveApplication: cancel");
             }
         });
@@ -572,8 +684,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 colors.set(index, progress);
-                editTexts.get(index).setText("");
-                editTexts.get(index).append(Integer.toString(progress));
+                MainActivity.this.updateColorPickerEditText(editTexts.get(index), progress);
                 MainActivity.this.updateColorPickerHex(editTextHex);
                 MainActivity.this.updateColorPickerView(viewColor);
             }
@@ -589,7 +700,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 try {
-                    seekBars.get(index).setProgress(Integer.parseInt(s.toString()));
+                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(index), Integer.parseInt(s.toString()));
                 }  catch (Exception e) {
                     Log.w(LOG_TAG, "Error: parsing integer" + e);
                 }
@@ -605,10 +716,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 try {
                     int color = Color.parseColor("#" + s.toString());
-                    seekBars.get(Config.COLOR_RED).setProgress(Color.red(color));
-                    seekBars.get(Config.COLOR_GREEN).setProgress(Color.green(color));
-                    seekBars.get(Config.COLOR_BLUE).setProgress(Color.blue(color));
-
+                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_RED), Color.red(color));
+                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_GREEN), Color.green(color));
+                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_BLUE), Color.blue(color));
                 } catch (Exception e) {
                     Log.w(LOG_TAG, "Error: parsing color" + e);
                 }
@@ -616,6 +726,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void afterTextChanged(Editable s) {}
         });
+    }
+
+    private void updateColorPickerSeekbar(SeekBar seekBar, int value) {
+        seekBar.setProgress(value);
+    }
+
+    private void updateColorPickerEditText(EditText editText, int value) {
+        editText.setText("");
+        editText.append(Integer.toString(value));
     }
 
     private void updateColorPickerHex(EditText editTextHex) {
@@ -655,19 +774,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             builder.setSingleChoiceItems(arrayAdapter, -1, new DialogInterface.OnClickListener() {
                 @Override
-                public void onClick(DialogInterface dialog, int index) {
-                    Log.d(LOG_TAG, "Scanned choice: " + index);
-                }
+                public void onClick(DialogInterface dialog, int which) {}
             });
 
             builder.setPositiveButton(this.getString(R.string.button_select), new DialogInterface.OnClickListener() {
                 @Override
-                public void onClick(DialogInterface dialog, int index) {
+                public void onClick(DialogInterface dialog, int which) {
+                    // Get the position of selected device
                     int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
                     String device = deviceList.get(selectedPosition);
-                    Log.d(LOG_TAG, "Scan positive: " + selectedPosition + ", selected: " + device.toString());
+                    Log.d(LOG_TAG, "showDialogScan: " + device.toString());
 
                     try {
+                        // Create JSON
                         JSONObject json = new JSONObject(device);
                         MainActivity.this.setDevice(json.getString(Config.JSON_DEVICE_NAME), json.getString(Config.JSON_DEVICE_ADDRESS));
                     } catch (JSONException e) {
@@ -682,7 +801,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         builder.setNegativeButton(this.getString(R.string.button_close), new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int index) {
+            public void onClick(DialogInterface dialog, int which) {
                 Log.d(LOG_TAG, "showDialogScan: close");
 
                 dialog.dismiss();
@@ -701,7 +820,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         progressConnect.setCancelable(false);
         progressConnect.setButton(DialogInterface.BUTTON_NEUTRAL, this.getString(R.string.button_cancel), new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int index) {
+            public void onClick(DialogInterface dialog, int which) {
                 Log.d(LOG_TAG, "showProgressConnecting: close");
 
                 MainActivity.this.stopProgressConnect();
@@ -786,32 +905,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void updateApplications() {
         Log.d(LOG_TAG, "updateApplications");
-        String stored = store.getJSONArray(Config.JSON_APPLICATIONS);
         applicationsAddedList =  new ArrayList<>();
-        JSONArray json;
+        JSONArray json = this.getApplications();
 
+        // Get a list of saved applications
         try {
-            json = new JSONArray(stored);
-
             for (int i = 0; i < json.length(); i++) {
-                String obj = json.get(i).toString();
-                applicationsAddedList.add(obj);
+                String app = json.get(i).toString();
+                applicationsAddedList.add(app);
             }
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Error: creating JSON " + e);
             e.printStackTrace();
         }
 
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, applicationsAddedList);
-
+        // Create an adapter with icons and color
         //ArrayAdapterWithIconAndColor adapter = new ArrayAdapterWithIconAndColor(this, applications, icons);
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, applicationsAddedList);
 
         listViewApplications.setAdapter(arrayAdapter);
 
         listViewApplications.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(LOG_TAG, "Selected: " + position + " " + id);
+                Log.d(LOG_TAG, "updateApplications: " + applicationsAddedList.get(position));
 
                 MainActivity.this.showDialogColorPicker(position);
             }
@@ -820,14 +937,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         listViewApplications.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(LOG_TAG, "Long Selected: " + position + " " + id);
+                Log.d(LOG_TAG, "updateApplications long: " + applicationsAddedList.get(position));
 
                 MainActivity.this.showDialogRemoveApplication(position);
                 return true;
             }
         });
-
-        Log.d(LOG_TAG, applicationsAddedList.toString());
     }
 
     private void updateButton() {
