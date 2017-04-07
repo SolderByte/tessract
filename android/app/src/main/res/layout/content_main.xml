@@ -57,6 +57,8 @@
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:layout_below="@+id/text_applications"
-        android:layout_alignParentBottom="true" />
+        android:layout_alignParentBottom="true"
+        android:divider="#eeeeee"
+        android:dividerHeight="1dp" />
 
 </RelativeLayout>

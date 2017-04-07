@@ -742,6 +742,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         String green = Integer.toHexString(colors.get(Config.COLOR_GREEN));
         String blue = Integer.toHexString(colors.get(Config.COLOR_BLUE));
 
+        // Zero padding
         if (red.length() < 2) {
             red = "0" + red;
         }
@@ -907,12 +908,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Log.d(LOG_TAG, "updateApplications");
         applicationsAddedList =  new ArrayList<>();
         JSONArray json = this.getApplications();
+        ArrayList<String> applicationNames = new ArrayList<String>();
+        ArrayList<Drawable> applicationIcons = new ArrayList<Drawable>();
+        ArrayList<Integer> applicationColors = new ArrayList<Integer>();
 
         // Get a list of saved applications
         try {
             for (int i = 0; i < json.length(); i++) {
                 String app = json.get(i).toString();
+                JSONObject temp =  new JSONObject(app);
                 applicationsAddedList.add(app);
+
+                String appName = temp.getString(Config.JSON_APPLICATION_NAME);
+                Drawable appIcon = this.getApplicationIcon(temp.getString(Config.JSON_PACKAGE_NAME));
+                int appColor = temp.getInt(Config.JSON_APPLICATION_COLOR);
+
+                applicationNames.add(appName);
+                applicationIcons.add(appIcon);
+                applicationColors.add(appColor);
             }
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Error: creating JSON " + e);
@@ -920,10 +933,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         // Create an adapter with icons and color
-        //ArrayAdapterWithIconAndColor adapter = new ArrayAdapterWithIconAndColor(this, applications, icons);
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_activated_1, applicationsAddedList);
+        ArrayAdapterWithIconAndColor adapter = new ArrayAdapterWithIconAndColor(this, applicationNames, applicationIcons, applicationColors);
 
-        listViewApplications.setAdapter(arrayAdapter);
+        listViewApplications.setAdapter(adapter);
 
         listViewApplications.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
