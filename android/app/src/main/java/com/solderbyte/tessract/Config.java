@@ -31,14 +31,19 @@ public class Config {
     public static final String INTENT_APPLICATION = INTENT + ".application";
     public static final String INTENT_APPLICATION_LIST = INTENT_APPLICATION + ".list";
     public static final String INTENT_APPLICATION_LISTED = INTENT_APPLICATION + ".listed";
+    public static final String INTENT_APPLICATION_SAVED = INTENT_APPLICATION + ".saved";
 
     public static final String INTENT_EXTRA_DATA = INTENT + ".extra.data";
     public static final String INTENT_EXTRA_MSG = INTENT + ".extra.message";
 
     public static final String INTENT_SERVICE = INTENT + ".service";
-    public static final String INTENT_SERVICE_START = INTENT_SERVICE + ".start";
-    public static final String INTENT_SERVICE_STOP = INTENT_SERVICE + ".stop";
     public static final String INTENT_SHUTDOWN = INTENT_SERVICE + ".shutdown";
+    public static final String INTENT_SERVICE_BLUETOOTH = INTENT_SERVICE + ".bluetooth";
+    public static final String INTENT_SERVICE_TESSRACT = INTENT_SERVICE + ".tessract";
+    public static final String INTENT_SERVICE_NOTIFICATION = INTENT_SERVICE + ".notification";
+    public static final String INTENT_SERVICE_BLUETOOTH_STARTED = INTENT_SERVICE_BLUETOOTH + ".started";
+    public static final String INTENT_SERVICE_TESSRACT_STARTED = INTENT_SERVICE_TESSRACT + ".started";
+    public static final String INTENT_SERVICE_NOTIFICATION_STARTED = INTENT_SERVICE_NOTIFICATION + ".started";
 
     public static final String INTENT_USER = INTENT + ".user";
 
@@ -56,8 +61,6 @@ public class Config {
     public static final int COLOR_GREEN = 1;
     public static final int COLOR_BLUE = 2;
     public static final int COLOR_DEFAULT = -12627531;
-
-
 
     public static HashMap<Integer, String> SERVICE_FLAGS = new HashMap<Integer, String>() {{
         put(0, "START_STICKY_COMPATIBILITY");

@@ -95,6 +95,7 @@ public class TessractService extends Service {
         packageManager = this.getPackageManager();
 
         this.startForeground(notificationId, notification);
+        this.sendIntent(Config.INTENT_SERVICE, Config.INTENT_SERVICE_TESSRACT_STARTED);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -201,9 +202,16 @@ public class TessractService extends Service {
         this.registerReceiver(applicationReceiver, new IntentFilter(Config.INTENT_APPLICATION));
         this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
         this.registerReceiver(bluetoothLeReceiver, new IntentFilter(Config.INTENT_BLUETOOTH));
+        this.registerReceiver(serviceReceiver, new IntentFilter(Config.INTENT_SERVICE));
 
         //this.registerReceiver(notificationReceiver, new IntentFilter(Intents.INTENT_NOTIFICATION));
         //this.registerReceiver(uiReceiver, new IntentFilter(Intents.INTENT_UI));
+    }
+
+    public void sendIntent(String name, String message) {
+        Intent msg = new Intent(name);
+        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        this.sendBroadcast(msg);
     }
 
     public void sendIntent(String name, String message, String data) {
@@ -240,24 +248,13 @@ public class TessractService extends Service {
             this.unregisterReceiver(applicationReceiver);
             this.unregisterReceiver(shutdownReceiver);
             this.unregisterReceiver(bluetoothLeReceiver);
+            this.unregisterReceiver(serviceReceiver);
         } catch (Exception e) {
             if (!e.getMessage().contains("Receiver not registered")) {
                 Log.e(LOG_TAG, e.toString());
             }
         }
     }
-
-    private BroadcastReceiver applicationReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
-            Log.d(LOG_TAG, "applicationReceiver: " + message);
-
-            if (message.equals(Config.INTENT_APPLICATION_LIST)) {
-                TessractService.this.listApplications();
-            }
-        }
-    };
 
     private ServiceConnection bluetoothLeServiceConnection = new ServiceConnection() {
 
@@ -272,12 +269,32 @@ public class TessractService extends Service {
         }
     };
 
+    private BroadcastReceiver applicationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
+            Log.d(LOG_TAG, "applicationReceiver: " + message);
+
+            if (message.equals(Config.INTENT_APPLICATION_LIST)) {
+                TessractService.this.listApplications();
+            }
+        }
+    };
+
     private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
             Log.d(LOG_TAG, "bluetoothLeReceiver: " + message);
+        }
+    };
+
+    private BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
+            Log.d(LOG_TAG, "serviceReceiver: " + message);
         }
     };
 

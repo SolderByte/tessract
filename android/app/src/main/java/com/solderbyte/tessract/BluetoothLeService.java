@@ -161,18 +161,19 @@ public class BluetoothLeService extends Service {
         // Setup bluetooth
         this.setupBluetooth();
 
+        this.sendIntent(Config.INTENT_SERVICE, Config.INTENT_SERVICE_BLUETOOTH_STARTED);
         return super.onStartCommand(intent, flags, startId);
     }
 
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-            Log.d(LOG_TAG, "onCharacteristicChanged ");
+            Log.d(LOG_TAG, "onCharacteristicChanged");
 
             byte[] bytes = characteristic.getValue();
             String value = new String(bytes);
 
-            Log.d(LOG_TAG, value);
+            Log.d(LOG_TAG, "onCharacteristicChanged: " + value);
         }
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
@@ -181,7 +182,7 @@ public class BluetoothLeService extends Service {
             byte[] bytes = characteristic.getValue();
             String value = new String(bytes);
 
-            Log.d(LOG_TAG, value);
+            Log.d(LOG_TAG, "onCharacteristicRead: " + value);
         }
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
@@ -426,7 +427,6 @@ public class BluetoothLeService extends Service {
                         }
 
                         BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_SCANNED);
-                        // BluetoothLeService.this.setEntries();
                     }
                 }, SCAN_PERIOD);
 

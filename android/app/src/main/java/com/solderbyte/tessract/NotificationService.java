@@ -28,6 +28,7 @@ public class NotificationService extends NotificationListenerService {
         // Check notification listener service
         this.checkNotificationListenerService();
 
+        this.sendIntent(Config.INTENT_SERVICE, Config.INTENT_SERVICE_NOTIFICATION_STARTED);
         super.onCreate();
     }
 
@@ -88,6 +89,12 @@ public class NotificationService extends NotificationListenerService {
 
         this.registerReceiver(notificationReceiver, new IntentFilter(Config.INTENT_NOTIFICATION));
         this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
+    }
+
+    public void sendIntent(String name, String message) {
+        Intent msg = new Intent(name);
+        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        this.sendBroadcast(msg);
     }
 
     private void unregisterReceivers() {

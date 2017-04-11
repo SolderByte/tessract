@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final int PERMISSION_ACCESS_COARSE_LOCATION = 100;
 
     // Progress dialogs
+    private static ProgressDialog progressApplications = null;
     private static ProgressDialog progressScan = null;
     private static ProgressDialog progressConnect = null;
     private static int progressScanIterations = 0;
@@ -262,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                MainActivity.this.showProgressApplications();
                 MainActivity.this.sendIntent(Config.INTENT_APPLICATION, Config.INTENT_APPLICATION_LIST);
             }
         });
@@ -320,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private Drawable getApplicationIcon(String packageName) {
-        Log.d(LOG_TAG, "getApplicationIcon: " + packageName);
+        Log.v(LOG_TAG, "getApplicationIcon: " + packageName);
         // Get icon
         PackageManager pm = this.getPackageManager();
         Drawable icon;
@@ -340,6 +342,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.registerReceiver(applicationReceiver, new IntentFilter(Config.INTENT_APPLICATION));
         this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
         this.registerReceiver(bluetoothLeReceiver, new IntentFilter(Config.INTENT_BLUETOOTH));
+        this.registerReceiver(serviceReceiver, new IntentFilter(Config.INTENT_SERVICE));
     }
 
     public void sendIntent(String name, String message) {
@@ -521,6 +524,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 dialog.dismiss();
             }
         });
+
+        // Dismiss progress dialog
+        this.stopProgressApplications();
 
         AlertDialog dialog = builder.create();
         dialog.show();
@@ -813,6 +819,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dialog.show();
     }
 
+    private void showProgressApplications() {
+        Log.d(LOG_TAG, "showProgressApplications");
+
+        progressApplications = new ProgressDialog(MainActivity.this);
+        progressApplications.setMessage(this.getString(R.string.progressdialog_applications));
+        progressApplications.setCancelable(false);
+
+        progressApplications.show();
+    }
+
     private void showProgressConnect() {
         Log.d(LOG_TAG, "showProgressConnecting");
 
@@ -874,7 +890,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.startService(serviceIntent);
     }
 
-    private  void stopProgressConnect() {
+    private void stopProgressApplications() {
+        Log.d(LOG_TAG, "stopProgressApplications");
+
+        if (progressApplications != null) {
+            progressApplications.dismiss();
+        }
+    }
+
+    private void stopProgressConnect() {
         Log.d(LOG_TAG, "stopProgressConnect");
 
         if (progressConnect != null) {
@@ -897,6 +921,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             this.unregisterReceiver(applicationReceiver);
             this.unregisterReceiver(shutdownReceiver);
             this.unregisterReceiver(bluetoothLeReceiver);
+            this.unregisterReceiver(serviceReceiver);
         } catch (Exception e) {
             if (!e.getMessage().contains("Receiver not registered")) {
                 Log.e(LOG_TAG, e.toString());
@@ -931,6 +956,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.e(LOG_TAG, "Error: creating JSON " + e);
             e.printStackTrace();
         }
+
+        // Broadcast list of saved applications
+        this.sendIntent(Config.INTENT_APPLICATION_SAVED, json.toString());
 
         // Create an adapter with icons and color
         ArrayAdapterWithIconAndColor adapter = new ArrayAdapterWithIconAndColor(this, applicationNames, applicationIcons, applicationColors);
@@ -1050,6 +1078,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 MainActivity.this.stopProgressScan();
                 MainActivity.this.showDialogScan();
             }
+        }
+    };
+
+    private BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
+            Log.d(LOG_TAG, "serviceReceiver: " + message);
         }
     };
 

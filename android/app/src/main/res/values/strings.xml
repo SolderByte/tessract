@@ -48,6 +48,7 @@
     <string name="notification_stop">Shut down</string>
 
     <!-- Progress Dialog -->
+    <string name="progressdialog_applications">Getting applications...</string>
     <string name="progressdialog_scan">Scanning...</string>
     <string name="progressdialog_connect">Connecting...</string>
 
