@@ -42,17 +42,6 @@ public class NotificationService extends NotificationListenerService {
         super.onDestroy();
     }
 
-    public void enableNotificationListenerService() {
-        Log.d(LOG_TAG, "enableNotificationListenerService");
-        // adb shell dumpsys notification
-
-        // Force start of notification service
-        ComponentName thisComponent = new ComponentName(this, NotificationService.class);
-        PackageManager packageManager = this.getPackageManager();
-        packageManager.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-        packageManager.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
-    }
-
     private void checkNotificationListenerService() {
         Log.d(LOG_TAG, "checkNotificationListenerService");
         boolean isNotificationListenerRunning = false;
@@ -84,6 +73,17 @@ public class NotificationService extends NotificationListenerService {
         this.enableNotificationListenerService();
     }
 
+    public void enableNotificationListenerService() {
+        Log.d(LOG_TAG, "enableNotificationListenerService");
+        // adb shell dumpsys notification
+
+        // Force start of notification service
+        ComponentName thisComponent = new ComponentName(this, NotificationService.class);
+        PackageManager packageManager = this.getPackageManager();
+        packageManager.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+        packageManager.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+    }
+
     private void registerReceivers() {
         Log.d(LOG_TAG, "registerReceivers");
 
@@ -92,12 +92,16 @@ public class NotificationService extends NotificationListenerService {
     }
 
     public void sendIntent(String name, String message) {
+        Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
+
         Intent msg = new Intent(name);
         msg.putExtra(Config.INTENT_EXTRA_MSG, message);
         this.sendBroadcast(msg);
     }
 
     private void unregisterReceivers() {
+        Log.d(LOG_TAG, "unregisterReceivers");
+
         try {
             this.unregisterReceiver(notificationReceiver);
             this.unregisterReceiver(shutdownReceiver);

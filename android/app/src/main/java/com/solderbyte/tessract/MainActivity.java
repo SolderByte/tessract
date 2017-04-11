@@ -286,21 +286,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.updateUi();
     }
 
-    private JSONArray getApplications() {
-        Log.d(LOG_TAG, "getApplications");
-        String stored = store.getJSONArray(Config.JSON_APPLICATIONS);
-        JSONArray json =  new JSONArray();
-
-        try {
-            json = new JSONArray(stored);
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Error: creating JSON " + e);
-            e.printStackTrace();
-        }
-
-        return json;
-    }
-
     private JSONObject getApplicationByIndex(int index) {
         Log.d(LOG_TAG, "getApplicationByIndex");
         JSONArray json = this.getApplications();
@@ -334,6 +319,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         return icon;
+    }
+
+    private JSONArray getApplications() {
+        Log.d(LOG_TAG, "getApplications");
+        String stored = store.getJSONArray(Config.JSON_APPLICATIONS);
+        JSONArray json =  new JSONArray();
+
+        try {
+            json = new JSONArray(stored);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: creating JSON " + e);
+            e.printStackTrace();
+        }
+
+        return json;
     }
 
     private void registerReceivers() {
@@ -449,30 +449,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         store.setBoolean(Config.DEVICE_STATE, value);
 
         this.updateButton();
-    }
-
-    private void showDialogNotificationAccess() {
-        Log.d(LOG_TAG, "showDialogNotificationAccess");
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-        dialog.setTitle(R.string.dialog_notification_access_title);
-        dialog.setMessage(R.string.dialog_notification_access_message);
-        dialog.setCancelable(false);
-
-        dialog.setPositiveButton(R.string.button_open, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                Log.d(LOG_TAG, "showDialogNotificationAccess: open");
-                startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
-            }
-        });
-        dialog.setNegativeButton(R.string.button_close, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                Log.d(LOG_TAG, "showDialogNotificationAccess: close");
-            }
-        });
-
-        AlertDialog alert = dialog.create();
-        alert.show();
     }
 
     private void showDialogApplications(final ArrayAdapterWithIcon adapter) {
@@ -634,6 +610,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.updateColorPicker(viewColor, seekBarBlue, editTextBlue, editTextHex, Config.COLOR_BLUE);;
     }
 
+    private void showDialogNotificationAccess() {
+        Log.d(LOG_TAG, "showDialogNotificationAccess");
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle(R.string.dialog_notification_access_title);
+        dialog.setMessage(R.string.dialog_notification_access_message);
+        dialog.setCancelable(false);
+
+        dialog.setPositiveButton(R.string.button_open, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(LOG_TAG, "showDialogNotificationAccess: open");
+                startActivity(new Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"));
+            }
+        });
+        dialog.setNegativeButton(R.string.button_close, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(LOG_TAG, "showDialogNotificationAccess: close");
+            }
+        });
+
+        AlertDialog alert = dialog.create();
+        alert.show();
+    }
+
     private void showDialogRemoveApplication(final int index) {
         Log.d(LOG_TAG, "showDialogRemoveApplication: " + index);
         ArrayList<String> applicationNames = new ArrayList<String>();
@@ -682,88 +682,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         AlertDialog alert = builder.create();
         alert.show();
-    }
-
-    private void updateColorPicker(final View viewColor, SeekBar seekBar, final EditText editText, final EditText editTextHex, final int index) {
-
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                colors.set(index, progress);
-                MainActivity.this.updateColorPickerEditText(editTexts.get(index), progress);
-                MainActivity.this.updateColorPickerHex(editTextHex);
-                MainActivity.this.updateColorPickerView(viewColor);
-            }
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {}
-        });
-
-        editText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                try {
-                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(index), Integer.parseInt(s.toString()));
-                }  catch (Exception e) {
-                    Log.w(LOG_TAG, "Error: parsing integer" + e);
-                }
-            }
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-
-        editTextHex.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                try {
-                    int color = Color.parseColor("#" + s.toString());
-                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_RED), Color.red(color));
-                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_GREEN), Color.green(color));
-                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_BLUE), Color.blue(color));
-                } catch (Exception e) {
-                    Log.w(LOG_TAG, "Error: parsing color" + e);
-                }
-            }
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-    }
-
-    private void updateColorPickerSeekbar(SeekBar seekBar, int value) {
-        seekBar.setProgress(value);
-    }
-
-    private void updateColorPickerEditText(EditText editText, int value) {
-        editText.setText("");
-        editText.append(Integer.toString(value));
-    }
-
-    private void updateColorPickerHex(EditText editTextHex) {
-        String red = Integer.toHexString(colors.get(Config.COLOR_RED));
-        String green = Integer.toHexString(colors.get(Config.COLOR_GREEN));
-        String blue = Integer.toHexString(colors.get(Config.COLOR_BLUE));
-
-        // Zero padding
-        if (red.length() < 2) {
-            red = "0" + red;
-        }
-        if (green.length() < 2) {
-            green = "0" + green;
-        }
-        if (blue.length() < 2) {
-            blue = "0" + blue;
-        }
-
-        editTextHex.setText(red + green + blue);
-    }
-
-    private void updateColorPickerView(View viewColor) {
-        viewColor.setBackgroundColor(Color.rgb(colors.get(Config.COLOR_RED), colors.get(Config.COLOR_GREEN), colors.get(Config.COLOR_BLUE)));
     }
 
     private void showDialogScan() {
@@ -1000,6 +918,88 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
             buttonConnect.setText(this.getString(R.string.button_connect));
         }
+    }
+
+    private void updateColorPicker(final View viewColor, SeekBar seekBar, final EditText editText, final EditText editTextHex, final int index) {
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                colors.set(index, progress);
+                MainActivity.this.updateColorPickerEditText(editTexts.get(index), progress);
+                MainActivity.this.updateColorPickerHex(editTextHex);
+                MainActivity.this.updateColorPickerView(viewColor);
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                try {
+                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(index), Integer.parseInt(s.toString()));
+                }  catch (Exception e) {
+                    Log.w(LOG_TAG, "Error: parsing integer" + e);
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        editTextHex.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                try {
+                    int color = Color.parseColor("#" + s.toString());
+                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_RED), Color.red(color));
+                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_GREEN), Color.green(color));
+                    MainActivity.this.updateColorPickerSeekbar(seekBars.get(Config.COLOR_BLUE), Color.blue(color));
+                } catch (Exception e) {
+                    Log.w(LOG_TAG, "Error: parsing color" + e);
+                }
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    private void updateColorPickerEditText(EditText editText, int value) {
+        editText.setText("");
+        editText.append(Integer.toString(value));
+    }
+
+    private void updateColorPickerHex(EditText editTextHex) {
+        String red = Integer.toHexString(colors.get(Config.COLOR_RED));
+        String green = Integer.toHexString(colors.get(Config.COLOR_GREEN));
+        String blue = Integer.toHexString(colors.get(Config.COLOR_BLUE));
+
+        // Zero padding
+        if (red.length() < 2) {
+            red = "0" + red;
+        }
+        if (green.length() < 2) {
+            green = "0" + green;
+        }
+        if (blue.length() < 2) {
+            blue = "0" + blue;
+        }
+
+        editTextHex.setText(red + green + blue);
+    }
+
+    private void updateColorPickerSeekbar(SeekBar seekBar, int value) {
+        seekBar.setProgress(value);
+    }
+
+    private void updateColorPickerView(View viewColor) {
+        viewColor.setBackgroundColor(Color.rgb(colors.get(Config.COLOR_RED), colors.get(Config.COLOR_GREEN), colors.get(Config.COLOR_BLUE)));
     }
 
     private void updateDevice() {

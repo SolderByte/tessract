@@ -438,21 +438,6 @@ public class BluetoothLeService extends Service {
         }
     }
 
-    public void setBluetoothEnabled(boolean enabled) {
-        Log.d(LOG_TAG, "setBluetoothEnabled");
-
-        isEnabled = enabled;
-        if (isEnabled) {
-            Log.d(LOG_TAG, "BluetoothAdapter is enabled");
-
-            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_ENABLED);
-        } else {
-            Log.d(LOG_TAG, "bluetoothAdapter is not enabled");
-
-            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISABLED);
-        }
-    }
-
     public void sendIntent(String name, String message) {
         Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
 
@@ -479,6 +464,21 @@ public class BluetoothLeService extends Service {
         this.sendBroadcast(msg);
     }
 
+    public void setBluetoothEnabled(boolean enabled) {
+        Log.d(LOG_TAG, "setBluetoothEnabled");
+
+        isEnabled = enabled;
+        if (isEnabled) {
+            Log.d(LOG_TAG, "BluetoothAdapter is enabled");
+
+            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_ENABLED);
+        } else {
+            Log.d(LOG_TAG, "bluetoothAdapter is not enabled");
+
+            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISABLED);
+        }
+    }
+
     public void setupBluetooth() {
         Log.d(LOG_TAG, "enableBluetooth");
 
@@ -501,6 +501,8 @@ public class BluetoothLeService extends Service {
     }
 
     public void unregisterReceivers() {
+        Log.d(LOG_TAG, "unregisterReceivers");
+
         try {
             this.unregisterReceiver(bluetoothLeReceiver);
             this.unregisterReceiver(shutdownReceiver);
