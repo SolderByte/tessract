@@ -287,6 +287,13 @@ public class TessractService extends Service {
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
             Log.d(LOG_TAG, "bluetoothLeReceiver: " + message);
+
+            if (message.equals(Config.INTENT_BLUETOOTH_CONNECTED)) {
+                TessractService.this.createNotification(true);
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_DISCONNECTED)) {
+                TessractService.this.createNotification(false);
+            }
         }
     };
 

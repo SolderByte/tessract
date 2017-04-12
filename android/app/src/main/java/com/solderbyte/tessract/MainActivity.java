@@ -241,7 +241,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onClick(View v) {
                 if (deviceAddress != null) {
                     Log.d(LOG_TAG, "buttonConnect: " + deviceName + ":" + deviceAddress);
-                    MainActivity.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CONNECT, deviceAddress);
+
+                    if (isConnected) {
+                        MainActivity.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISCONNECT, deviceAddress);
+                    } else {
+                        MainActivity.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CONNECT, deviceAddress);
+                    }
                 } else {
                     Log.d(LOG_TAG, "buttonConnect: No device set");
                 }
@@ -1021,6 +1026,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    private void updateBluetoothStatus() {
+        Log.d(LOG_TAG, "updateBluetoothStatus");
+
+        this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_STATUS);
+    }
+
     private void updateTextViewDevice(String device) {
         Log.d(LOG_TAG, "updateTextViewDevice: " + device);
 
@@ -1035,6 +1046,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.updateApplications();
         this.updateButton();
         this.updateDevice();
+        this.updateBluetoothStatus();
     }
 
     private BroadcastReceiver applicationReceiver = new BroadcastReceiver() {
@@ -1086,6 +1098,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
             Log.d(LOG_TAG, "serviceReceiver: " + message);
+
+            if (message.equals(Config.INTENT_SERVICE_BLUETOOTH_STARTED)) {
+                MainActivity.this.updateBluetoothStatus();
+            }
         }
     };
 

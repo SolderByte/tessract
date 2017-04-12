@@ -28,6 +28,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -120,14 +121,19 @@ public class BluetoothLeService extends Service {
     private static byte[] bondPin = pin.getBytes();
 
     // Scan
-    private final static long SCAN_PERIOD = 7000;
+    private final static long scanPeriod = 7000;
     private static Set<BluetoothDevice> pairedDevices;
     private static Set<BluetoothDevice> scannedDevices;
 
     // States
-    private boolean isConnected = false;
-    private boolean isEnabled = false;
-    private boolean isScanning = false;
+    private static boolean isConnected = false;
+    private static boolean isEnabled = false;
+    private static boolean isScanning = false;
+    private static boolean isSending = false;
+
+    // Transport
+    private static int bluetoothMtu = 20;
+    private static byte[] bytesTxBuffer = null;
 
     // Threads
     private static EnableBluetoothThread enableBluetoothThread;
@@ -262,8 +268,8 @@ public class BluetoothLeService extends Service {
         }
     };
 
-    public void connectBluetooth(String address) {
-        Log.d(LOG_TAG, "connectBluetooth: " + address);
+    public void connectBluetoothLe(String address) {
+        Log.d(LOG_TAG, "connectBluetoothLe: " + address);
 
         if (bluetoothAdapter == null || address == null) {
             Log.d(LOG_TAG, "BluetoothAdapter is null");
@@ -277,7 +283,7 @@ public class BluetoothLeService extends Service {
         // Force a connection
         if (bluetoothGatt != null) {
             if (bluetoothGatt.connect()) {
-                this.connectBluetoothForce(address);
+                this.connectBluetoothLeForce(address);
                 return;
             } else {
                 Log.d(LOG_TAG, "Could not force connect");
@@ -303,20 +309,20 @@ public class BluetoothLeService extends Service {
         this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CONNECTING);
     }
 
-    public void connectBluetoothForce(String address) {
-        Log.d(LOG_TAG, "connectBluetoothForce: " + address);
+    public void connectBluetoothLeForce(String address) {
+        Log.d(LOG_TAG, "connectBluetoothLeForce: " + address);
         bluetoothAddress = address;
 
         if (bluetoothAddress != null) {
-            this.disconnectBluetooth();
-            this.connectBluetooth(address);
+            this.disconnectBluetoothLe();
+            this.connectBluetoothLe(address);
         } else {
             Log.d(LOG_TAG, "bluetoothAddress is null");
         }
     }
 
-    public  void disconnectBluetooth() {
-        Log.d(LOG_TAG, "disconnectBluetooth");
+    public  void disconnectBluetoothLe() {
+        Log.d(LOG_TAG, "disconnectBluetoothLe");
 
         if (bluetoothGatt == null) {
             Log.d(LOG_TAG, "BluetoothGatt is null");
@@ -325,6 +331,8 @@ public class BluetoothLeService extends Service {
         bluetoothGatt.disconnect();
         bluetoothGatt.close();
         bluetoothGatt = null;
+
+        this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISCONNECTED);
     }
 
     public void enableBluetooth() {
@@ -370,6 +378,16 @@ public class BluetoothLeService extends Service {
         }
     }
 
+    public void getBluetoothStatus() {
+        Log.d(LOG_TAG, "getBluetoothStatus");
+
+        if (isConnected) {
+            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CONNECTED);
+        } else {
+            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISCONNECTED);
+        }
+    }
+
     private void registerReceivers() {
         Log.d(LOG_TAG, "registerReceivers");
 
@@ -385,16 +403,16 @@ public class BluetoothLeService extends Service {
                 isScanning = true;
                 // Start scan
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Log.d(LOG_TAG, "Scanning with startScan: " + SCAN_PERIOD + "ms: Android >= 5.0");
+                    Log.d(LOG_TAG, "Scanning with startScan: " + scanPeriod + "ms: Android >= 5.0");
 
                     BluetoothLeScanner mBluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
                     mBluetoothLeScanner.startScan(bluetoothScanCallback);
                 } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                    Log.d(LOG_TAG, "Scanning with startLeScan: " + SCAN_PERIOD + "ms: Android < 5.0");
+                    Log.d(LOG_TAG, "Scanning with startLeScan: " + scanPeriod + "ms: Android < 5.0");
 
                     bluetoothAdapter.startLeScan(bluetoothLeScanCallback);
                 } else {
-                    Log.d(LOG_TAG, "Scanning with startDiscovery: " + SCAN_PERIOD + "ms: Android other");
+                    Log.d(LOG_TAG, "Scanning with startDiscovery: " + scanPeriod + "ms: Android other");
                     // Bluetooth Classic
 
                     IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
@@ -428,7 +446,7 @@ public class BluetoothLeService extends Service {
 
                         BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_SCANNED);
                     }
-                }, SCAN_PERIOD);
+                }, scanPeriod);
 
             } else {
                 Log.d(LOG_TAG, "Already scanning bluetooth");
@@ -511,6 +529,41 @@ public class BluetoothLeService extends Service {
                 Log.e(LOG_TAG, e.toString());
             }
         }
+    }
+
+    public void writeBluetoothLe(byte[] bytes) {
+        Log.d(LOG_TAG, "writeBluetoothLe");
+
+        if (bluetoothGattCharacteristic != null) {
+            // Chunk data
+            if (bytes.length > bluetoothMtu) {
+                byte[] bytesToSend = Arrays.copyOfRange(bytes, 0, bluetoothMtu);
+                bytesTxBuffer = Arrays.copyOfRange(bytes, bluetoothMtu, bytes.length);
+                isSending = true;
+                bytes = bytesToSend;
+            }
+
+            // Set data
+            if (bluetoothGattCharacteristic.setValue(bytes)) {
+                this.writeBluetoothCharacteristic(bluetoothGattCharacteristic);
+                //this.setCharacteristicNotification(bluetoothGattCharacteristic, true);
+            } else {
+                Log.d(LOG_TAG, "BluetoothGattCharacteristic could not be set");
+            }
+        } else {
+            Log.d(LOG_TAG, "BluetoothGattCharacteristic is null");
+        }
+    }
+
+    public void writeBluetoothCharacteristic(BluetoothGattCharacteristic characteristic) {
+        Log.d(LOG_TAG, "writeBluetoothCharacteristic");
+
+        if (bluetoothAdapter == null || bluetoothGatt == null) {
+            Log.d(LOG_TAG, "BluetoothAdapter is null or BluetoothGatt is null");
+            return;
+        }
+
+        bluetoothGatt.writeCharacteristic(characteristic);
     }
 
     @SuppressLint("NewApi")
@@ -611,14 +664,17 @@ public class BluetoothLeService extends Service {
 
             if (message.equals(Config.INTENT_BLUETOOTH_CONNECT)) {
                 String address = intent.getStringExtra(Config.INTENT_EXTRA_DATA);
-                BluetoothLeService.this.connectBluetooth(address);
+                BluetoothLeService.this.connectBluetoothLe(address);
             }
             if (message.equals(Config.INTENT_BLUETOOTH_DISCONNECT)) {
-                BluetoothLeService.this.disconnectBluetooth();
+                BluetoothLeService.this.disconnectBluetoothLe();
             }
             if (message.equals(Config.INTENT_BLUETOOTH_SCAN)) {
                 BluetoothLeService.this.getBluetoothPaired();
                 BluetoothLeService.this.scanBluetooth();
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_STATUS)) {
+                BluetoothLeService.this.getBluetoothStatus();
             }
         }
     };

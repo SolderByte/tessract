@@ -17,6 +17,7 @@ public class Config {
     public static final String INTENT_BLUETOOTH_ENABLED = INTENT_BLUETOOTH + ".enabled";
     public static final String INTENT_BLUETOOTH_DISABLE = INTENT_BLUETOOTH + ".disable";
     public static final String INTENT_BLUETOOTH_DISABLED = INTENT_BLUETOOTH + ".disabled";
+    public static final String INTENT_BLUETOOTH_STATUS = INTENT_BLUETOOTH + ".status";
     public static final String INTENT_BLUETOOTH_SCAN = INTENT_BLUETOOTH + ".scan";
     public static final String INTENT_BLUETOOTH_SCANNED = INTENT_BLUETOOTH + ".scanned";
     public static final String INTENT_BLUETOOTH_CONNECT = INTENT_BLUETOOTH + ".connect";
