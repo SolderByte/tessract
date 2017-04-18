@@ -294,7 +294,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private JSONObject getApplicationByIndex(int index) {
         Log.d(LOG_TAG, "getApplicationByIndex");
         JSONArray json = this.getApplications();
-        JSONObject app =  new JSONObject();
+        JSONObject app = new JSONObject();
 
         try {
             if (index > json.length()) {
@@ -329,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private JSONArray getApplications() {
         Log.d(LOG_TAG, "getApplications");
         String stored = store.getJSONArray(Config.JSON_APPLICATIONS);
-        JSONArray json =  new JSONArray();
+        JSONArray json = new JSONArray();
 
         try {
             json = new JSONArray(stored);
@@ -388,7 +388,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Log.d(LOG_TAG, "setApplicationsList: " + applications.toString());
         applicationsList = applications;
         ArrayList<String> applicationNames = new ArrayList<String>();
-        ArrayList<Drawable> icons =  new ArrayList<Drawable>();
+        ArrayList<Drawable> icons = new ArrayList<Drawable>();
 
         for (int i = 0; i < applicationsList.size(); i++) {
             try {
@@ -552,7 +552,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 int color = Color.rgb(colors.get(Config.COLOR_RED), colors.get(Config.COLOR_GREEN), colors.get(Config.COLOR_BLUE));
 
-                ArrayList<String> applications =  new ArrayList<>();
+                ArrayList<String> applications = new ArrayList<>();
                 JSONObject app = MainActivity.this.getApplicationByIndex(index);
 
                 try {
@@ -854,7 +854,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void updateApplications() {
         Log.d(LOG_TAG, "updateApplications");
-        applicationsAddedList =  new ArrayList<>();
+        applicationsAddedList = new ArrayList<>();
         JSONArray json = this.getApplications();
         ArrayList<String> applicationNames = new ArrayList<String>();
         ArrayList<Drawable> applicationIcons = new ArrayList<Drawable>();
@@ -864,7 +864,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
             for (int i = 0; i < json.length(); i++) {
                 String app = json.get(i).toString();
-                JSONObject temp =  new JSONObject(app);
+                JSONObject temp = new JSONObject(app);
                 applicationsAddedList.add(app);
 
                 String appName = temp.getString(Config.JSON_APPLICATION_NAME);
@@ -881,7 +881,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         // Broadcast list of saved applications
-        this.sendIntent(Config.INTENT_APPLICATION_SAVED, json.toString());
+        this.sendIntent(Config.INTENT_APPLICATION, Config.INTENT_APPLICATION_SAVED, json.toString());
 
         // Create an adapter with icons and color
         ArrayAdapterWithIconAndColor adapter = new ArrayAdapterWithIconAndColor(this, applicationNames, applicationIcons, applicationColors);
