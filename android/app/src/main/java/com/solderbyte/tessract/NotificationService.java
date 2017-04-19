@@ -11,11 +11,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Process;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.ViewGroup;
+import android.widget.RemoteViews;
+import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,6 +36,21 @@ public class NotificationService extends NotificationListenerService {
     // Applications
     private static ArrayList<String> applicationsAddedList = null;
 
+    // JSON
+    public static String jsonPackageName = "packageName";
+    public static String jsonApplicationName = "applicationName";
+    public static String jsonTitle = "title";
+    public static String jsonTicker = "ticker";
+    public static String jsonMessage = "message";
+    public static String jsonSubMessage = "subMessage";
+    public static String jsonSummary = "summary";
+    public static String jsonInfo = "info";
+    public static String jsonTag = "tag";
+    public static String jsonTime = "time";
+    public static String jsonId = "id";
+    public static String jsonBigText = "bigText";
+    public static String jsonText = "text";
+
     // Notification
     private static String notificationTitle = "android.title";
     private static String notificationText = "android.text";
@@ -38,6 +58,10 @@ public class NotificationService extends NotificationListenerService {
     private static String notificationSummaryText = "android.summaryText";
     private static String notificationInfoText = "android.infoText";
     private static String notificationReduced = "Reduced content";
+    private static String notificationIdTitle = "android:id/title";
+    private static String notificationIdBigText = "android:id/big_text";
+    private static String notificationIdText= "android:id/text";
+
 
     @Override
     public void onCreate() {
@@ -68,11 +92,13 @@ public class NotificationService extends NotificationListenerService {
         Log.d(LOG_TAG, "onNotificationPosted");
 
         this.getNotificationData(statusBarNotification);
+        this.getNotificationDataFromView(statusBarNotification);
     }
 
     @Override
-    public void onNotificationRemoved(StatusBarNotification notification) {
-        Log.d(LOG_TAG, "onNotificationRemoved");
+    public void onNotificationRemoved(StatusBarNotification statusBarNotification) {
+        String packageName = statusBarNotification.getPackageName();
+        Log.d(LOG_TAG, "onNotificationRemoved: " + packageName);
     }
 
     private void checkNotificationListenerService() {
@@ -117,7 +143,7 @@ public class NotificationService extends NotificationListenerService {
         packageManager.setComponentEnabledSetting(thisComponent, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
     }
 
-    private void getNotificationData(StatusBarNotification statusBarNotification) {
+    private JSONObject getNotificationData(StatusBarNotification statusBarNotification) {
         Log.d(LOG_TAG, "getNotificationData");
         PackageManager packageManager = this.getPackageManager();
         String packageName = statusBarNotification.getPackageName();
@@ -131,7 +157,6 @@ public class NotificationService extends NotificationListenerService {
             Log.d(LOG_TAG, "Cannot get ApplicationInfo");
         }
 
-
         // Notification data
         String title = null;
         String ticker = null;
@@ -142,7 +167,6 @@ public class NotificationService extends NotificationListenerService {
         String tag = statusBarNotification.getTag();
         long time = statusBarNotification.getPostTime();
         int id = statusBarNotification.getId();
-
 
         // Get ticket text
         try {
@@ -156,9 +180,9 @@ public class NotificationService extends NotificationListenerService {
         Bundle notificationExtras = notification.extras;
         int flags = notification.flags;
 
-        if ((flags & Notification.FLAG_ONGOING_EVENT) != 0) {
-            return;
-        }
+        //if ((flags & Notification.FLAG_ONGOING_EVENT) != 0) {
+        //    return;
+        //}
 
         // Get notification data from extras
         title = notificationExtras.getString(notificationTitle);
@@ -167,18 +191,105 @@ public class NotificationService extends NotificationListenerService {
         summary = notificationExtras.getString(notificationSummaryText);
         info = notificationExtras.getString(notificationInfoText);
 
-        Log.d(LOG_TAG, "Notification:");
-        Log.d(LOG_TAG, "packageName: " + packageName);
-        Log.d(LOG_TAG, "applicationName: " + applicationName);
-        Log.d(LOG_TAG, "title: " + title);
-        Log.d(LOG_TAG, "ticker: " + ticker);
-        Log.d(LOG_TAG, "message: " + message);
-        Log.d(LOG_TAG, "submessage: " + submessage);
-        Log.d(LOG_TAG, "summary: " + summary);
-        Log.d(LOG_TAG, "info: " + info);
-        Log.d(LOG_TAG, "tag: " + tag);
-        Log.d(LOG_TAG, "time: " + time);
-        Log.d(LOG_TAG, "id: " + id);
+        // Create JSON object
+        JSONObject json = null;
+        try {
+            json = new JSONObject();
+            json.put(jsonPackageName, packageName);
+            json.put(jsonApplicationName, applicationName);
+            json.put(jsonTitle, title);
+            json.put(jsonTicker, ticker);
+            json.put(jsonMessage, message);
+            json.put(jsonSubMessage, submessage);
+            json.put(jsonSummary, summary);
+            json.put(jsonInfo, info);
+            json.put(jsonTag, tag);
+            json.put(jsonTime, time);
+            json.put(jsonId, id);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: creating JSON " + e);
+            e.printStackTrace();
+        }
+
+        Log.d(LOG_TAG, "Notification: " + json.toString());
+        return json;
+    }
+
+    private JSONObject getNotificationDataFromView(StatusBarNotification statusBarNotification) {
+        Log.d(LOG_TAG, "getNotificationDataFromView");
+        PackageManager packageManager = this.getPackageManager();
+        String packageName = statusBarNotification.getPackageName();
+
+        // Get notification API v19
+        Notification notification = statusBarNotification.getNotification();
+
+        Resources resources = null;
+        try {
+            resources = packageManager.getResourcesForApplication(packageName);
+        } catch(Exception e){
+            Log.e(LOG_TAG, "Failed to getResourcesForApplication: " + e.getMessage());
+        }
+
+        if (resources == null) {
+            Log.e(LOG_TAG, "No getResourcesForApplication");
+            return null;
+        }
+
+        int titleId = resources.getIdentifier(notificationIdTitle, null, null);
+        int bigTextId = resources.getIdentifier(notificationIdBigText, null, null);
+        int textId = resources.getIdentifier(notificationIdText, null, null);
+
+        // Get view
+        RemoteViews views = notification.bigContentView;
+        if (views == null) {
+            views = notification.contentView;
+        }
+        if (views == null) {
+            Log.e(LOG_TAG, "No notification views");
+            return null;
+        }
+
+        // Get layout
+        LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        ViewGroup localView = (ViewGroup) inflater.inflate(views.getLayoutId(), null);
+        views.reapply(this.getApplicationContext(), localView);
+
+        // Get Textviews
+        TextView textviewTitle = (TextView) localView.findViewById(titleId);
+        TextView textviewBigText = (TextView) localView.findViewById(bigTextId);
+        TextView textviewText = (TextView) localView.findViewById(textId);
+
+        // Notification data
+        String title = null;
+        String bigText = null;
+        String text = null;
+
+        // Get notification data from views
+        if (textviewTitle != null) {
+            title = textviewTitle.getText().toString();
+        }
+        if (textviewBigText != null) {
+            bigText = textviewBigText.getText().toString();
+        }
+        if (textviewText != null) {
+            text = textviewText.getText().toString();
+        }
+
+        // Create JSON object
+        JSONObject json = null;
+        try {
+            json = new JSONObject();
+            json.put(jsonPackageName, packageName);
+            json.put(jsonTitle, title);
+            json.put(jsonBigText, bigText);
+            json.put(jsonText, text);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: creating JSON " + e);
+            e.printStackTrace();
+        }
+
+        Log.d(LOG_TAG, "Notification: " + json.toString());
+        return json;
     }
 
     private void registerReceivers() {
