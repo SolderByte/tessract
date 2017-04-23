@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Process;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class NotificationService extends NotificationListenerService {
@@ -35,6 +37,13 @@ public class NotificationService extends NotificationListenerService {
 
     // Applications
     private static ArrayList<String> applicationsAddedList = null;
+
+    // Intent
+    public static final String INTENT = "com.solderbyte.notification";
+    public static final String INTENT_MESSAGE = INTENT + ".message";
+    public static final String INTENT_DATA = INTENT + ".data";
+    public static final String INTENT_NOTIFICATION_POSTED = INTENT + ".posted";
+    public static final String INTENT_NOTIFICATION_REMOVED = INTENT + ".removed";
 
     // JSON
     public static String jsonPackageName = "packageName";
@@ -91,14 +100,46 @@ public class NotificationService extends NotificationListenerService {
     public void onNotificationPosted(StatusBarNotification statusBarNotification) {
         Log.d(LOG_TAG, "onNotificationPosted");
 
-        this.getNotificationData(statusBarNotification);
-        this.getNotificationDataFromView(statusBarNotification);
+        // Get notification API v19
+        Notification notification = statusBarNotification.getNotification();
+        int flags = notification.flags;
+
+        // Ignore ongoing notifications
+        if ((flags & Notification.FLAG_ONGOING_EVENT) != 0) {
+            return;
+        }
+
+        JSONObject jsonData = this.getNotificationData(statusBarNotification);
+        JSONObject jsonView = this.getNotificationDataFromView(statusBarNotification);
+
+        JSONObject json = new JSONObject();
+        try {
+            Iterator<String> dataKeys = jsonData.keys();
+            Iterator<String> viewKeys = jsonView.keys();
+
+            while (dataKeys.hasNext()) {
+                String key = dataKeys.next();
+                json.put(key, jsonData.get(key));
+            }
+
+            while(viewKeys.hasNext()){
+                String key = viewKeys.next();
+                json.put(key, jsonView.get(key));
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: creating JSON " + e);
+            e.printStackTrace();
+        }
+
+        Log.d(LOG_TAG, "Notification: " + json.toString());
+        this.sendIntent(INTENT, INTENT_NOTIFICATION_POSTED, json.toString());
     }
 
     @Override
     public void onNotificationRemoved(StatusBarNotification statusBarNotification) {
         String packageName = statusBarNotification.getPackageName();
         Log.d(LOG_TAG, "onNotificationRemoved: " + packageName);
+
     }
 
     private void checkNotificationListenerService() {
@@ -117,7 +158,7 @@ public class NotificationService extends NotificationListenerService {
         for (ActivityManager.RunningServiceInfo service : runningServices) {
             if (service.service.equals(thisComponent)) {
                 Log.d(LOG_TAG, "checkNotificationListenerService service - pid: " + service.pid + ", currentPID: " + Process.myPid() + ", clientPackage: " + service.clientPackage + ", clientCount: " + service.clientCount + ", clientLabel: " + ((service.clientLabel == 0) ? "0" : "(" + getResources().getString(service.clientLabel) + ")"));
-                if (service.pid == Process.myPid() /*&& service.clientCount > 0 && !TextUtils.isEmpty(service.clientPackage)*/) {
+                if (service.pid == Process.myPid() && service.clientCount > 0 && !TextUtils.isEmpty(service.clientPackage)) {
                     isNotificationListenerRunning = true;
                 }
             }
@@ -178,11 +219,6 @@ public class NotificationService extends NotificationListenerService {
         // Get notification API v19
         Notification notification = statusBarNotification.getNotification();
         Bundle notificationExtras = notification.extras;
-        int flags = notification.flags;
-
-        //if ((flags & Notification.FLAG_ONGOING_EVENT) != 0) {
-        //    return;
-        //}
 
         // Get notification data from extras
         title = notificationExtras.getString(notificationTitle);
@@ -211,7 +247,6 @@ public class NotificationService extends NotificationListenerService {
             e.printStackTrace();
         }
 
-        Log.d(LOG_TAG, "Notification: " + json.toString());
         return json;
     }
 
@@ -288,7 +323,6 @@ public class NotificationService extends NotificationListenerService {
             e.printStackTrace();
         }
 
-        Log.d(LOG_TAG, "Notification: " + json.toString());
         return json;
     }
 
@@ -304,7 +338,16 @@ public class NotificationService extends NotificationListenerService {
         Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
 
         Intent msg = new Intent(name);
-        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        msg.putExtra(INTENT_MESSAGE, message);
+        this.sendBroadcast(msg);
+    }
+
+    public void sendIntent(String name, String message, String data) {
+        Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
+
+        Intent msg = new Intent(name);
+        msg.putExtra(INTENT_MESSAGE, message);
+        msg.putExtra(INTENT_DATA, data);
         this.sendBroadcast(msg);
     }
 

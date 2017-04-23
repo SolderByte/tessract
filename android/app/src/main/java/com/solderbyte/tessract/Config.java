@@ -26,6 +26,7 @@ public class Config {
     public static final String INTENT_BLUETOOTH_DISCONNECT = INTENT_BLUETOOTH + ".disconnect";
     public static final String INTENT_BLUETOOTH_DISCONNECTED = INTENT_BLUETOOTH + ".disconnected";
     public static final String INTENT_BLUETOOTH_CHARACTERISTIC = INTENT_BLUETOOTH + ".characteristic";
+    public static final String INTENT_BLUETOOTH_WRITE = INTENT_BLUETOOTH + ".write";
 
     public static final String INTENT_NOTIFICATION = INTENT + ".notification";
 

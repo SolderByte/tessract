@@ -196,16 +196,28 @@ public class TessractService extends Service {
         this.sendIntent(Config.INTENT_APPLICATION, Config.INTENT_APPLICATION_LISTED, filteredApplications);
     }
 
+    private void onNotificationPosted(String data) {
+        Log.d(LOG_TAG, "onNotificationPosted: " + data);
+        JSONObject json = null;
+
+        try {
+            json = new JSONObject(data);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Error: creating JSON " + e);
+            e.printStackTrace();
+        }
+
+        this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_WRITE, json.toString());
+    }
+
     private void registerReceivers() {
         Log.d(LOG_TAG, "registerReceivers");
 
         this.registerReceiver(applicationReceiver, new IntentFilter(Config.INTENT_APPLICATION));
-        this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
         this.registerReceiver(bluetoothLeReceiver, new IntentFilter(Config.INTENT_BLUETOOTH));
+        this.registerReceiver(notificationReceiver, new IntentFilter(NotificationService.INTENT));
         this.registerReceiver(serviceReceiver, new IntentFilter(Config.INTENT_SERVICE));
-
-        //this.registerReceiver(notificationReceiver, new IntentFilter(Intents.INTENT_NOTIFICATION));
-        //this.registerReceiver(uiReceiver, new IntentFilter(Intents.INTENT_UI));
+        this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
     }
 
     public void sendIntent(String name, String message) {
@@ -246,9 +258,10 @@ public class TessractService extends Service {
 
         try {
             this.unregisterReceiver(applicationReceiver);
-            this.unregisterReceiver(shutdownReceiver);
             this.unregisterReceiver(bluetoothLeReceiver);
+            this.unregisterReceiver(notificationReceiver);
             this.unregisterReceiver(serviceReceiver);
+            this.unregisterReceiver(shutdownReceiver);
         } catch (Exception e) {
             if (!e.getMessage().contains("Receiver not registered")) {
                 Log.e(LOG_TAG, e.toString());
@@ -257,7 +270,6 @@ public class TessractService extends Service {
     }
 
     private ServiceConnection bluetoothLeServiceConnection = new ServiceConnection() {
-
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.d(LOG_TAG, "onServiceConnected: " + name + ", " + service);
@@ -282,7 +294,6 @@ public class TessractService extends Service {
     };
 
     private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {
-
         @Override
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
@@ -297,6 +308,19 @@ public class TessractService extends Service {
         }
     };
 
+    private BroadcastReceiver notificationReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String message = intent.getStringExtra(NotificationService.INTENT_MESSAGE);
+            Log.d(LOG_TAG, "notificationReceiver: " + message);
+
+            if (message.equals(NotificationService.INTENT_NOTIFICATION_POSTED)) {
+                String data = intent.getStringExtra(NotificationService.INTENT_DATA);
+                TessractService.this.onNotificationPosted(data);
+            }
+        }
+    };
+
     private BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -306,7 +330,6 @@ public class TessractService extends Service {
     };
 
     private BroadcastReceiver shutdownReceiver = new BroadcastReceiver() {
-
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(LOG_TAG, "shutdownReceiver");

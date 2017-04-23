@@ -1063,7 +1063,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     };
 
     private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {
-
         @Override
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
@@ -1106,7 +1105,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     };
 
     private BroadcastReceiver shutdownReceiver = new BroadcastReceiver() {
-
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(LOG_TAG, "shutdownReceiver");
