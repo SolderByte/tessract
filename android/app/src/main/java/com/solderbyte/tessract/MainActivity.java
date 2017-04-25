@@ -351,22 +351,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void sendIntent(String name, String message) {
+        Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
+
         Intent msg = new Intent(name);
         msg.putExtra(Config.INTENT_EXTRA_MSG, message);
         this.sendBroadcast(msg);
     }
 
     public void sendIntent(String name, String message, String data) {
+        Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
+
         Intent msg = new Intent(name);
         msg.putExtra(Config.INTENT_EXTRA_MSG, message);
         msg.putExtra(Config.INTENT_EXTRA_DATA, data);
-        this.sendBroadcast(msg);
-    }
-
-    public void sendIntent(String name, String message, ArrayList<String> list) {
-        Intent msg = new Intent(name);
-        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
-        msg.putStringArrayListExtra(Config.INTENT_EXTRA_DATA, list);
         this.sendBroadcast(msg);
     }
 

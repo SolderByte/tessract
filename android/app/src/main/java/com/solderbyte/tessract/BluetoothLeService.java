@@ -473,15 +473,6 @@ public class BluetoothLeService extends Service {
         this.sendBroadcast(msg);
     }
 
-    public void sendIntent(String name, String message, ArrayList<String> data) {
-        Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
-
-        Intent msg = new Intent(name);
-        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
-        msg.putStringArrayListExtra(Config.INTENT_EXTRA_DATA, data);
-        this.sendBroadcast(msg);
-    }
-
     public void setBluetoothEnabled(boolean enabled) {
         Log.d(LOG_TAG, "setBluetoothEnabled");
 
@@ -674,6 +665,10 @@ public class BluetoothLeService extends Service {
             }
             if (message.equals(Config.INTENT_BLUETOOTH_STATUS)) {
                 BluetoothLeService.this.getBluetoothStatus();
+            }
+            if (message.equals(Config.INTENT_BLUETOOTH_WRITE)) {
+                byte[] bytes = intent.getByteArrayExtra(Config.INTENT_EXTRA_DATA);
+                BluetoothLeService.this.writeBluetoothLe(bytes);
             }
         }
     };

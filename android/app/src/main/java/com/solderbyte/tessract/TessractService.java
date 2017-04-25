@@ -199,7 +199,9 @@ public class TessractService extends Service {
     private void onNotificationPosted(String data) {
         Log.d(LOG_TAG, "onNotificationPosted: " + data);
         JSONObject json = null;
+        String rgb = "";
 
+        // Get notification
         try {
             json = new JSONObject(data);
         } catch (JSONException e) {
@@ -207,7 +209,14 @@ public class TessractService extends Service {
             e.printStackTrace();
         }
 
-        this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_WRITE, json.toString());
+        // Get application settings
+        int appColor = Config.COLOR_DEFAULT;
+        rgb = TessractProtocol.colorToHex(appColor);
+
+        // Convert data into bytes
+        byte[] bytes = TessractProtocol.toProtocol(2, 2, 2, 0, rgb);
+
+        this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_WRITE, bytes);
     }
 
     private void registerReceivers() {
@@ -221,8 +230,19 @@ public class TessractService extends Service {
     }
 
     public void sendIntent(String name, String message) {
+        Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
+
         Intent msg = new Intent(name);
         msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        this.sendBroadcast(msg);
+    }
+
+    public void sendIntent(String name, String message, byte[] data) {
+        Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
+
+        Intent msg = new Intent(name);
+        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        msg.putExtra(Config.INTENT_EXTRA_DATA, data);
         this.sendBroadcast(msg);
     }
 

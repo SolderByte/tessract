@@ -8,6 +8,12 @@ public class TessractProtocol {
     // Log tag
     private static final String LOG_TAG = "Tessract:Protocol";
 
+    // Defaults
+    private static String[] defaultActions = {"Off", "On", "Blink", "Pulse"};
+    private static String[] defaultAmounts = {"1", "2", "3", "5"};
+    private static String[] defaultDurations = {"Fastest", "Fast", "Normal", "Slow"};
+    private static String[] defaultRepeats = {"none", "5 secs", "15 secs", "30 secs"};
+
     /*              Protocol
     ---------------------------------------------
     | 00000000 | 00000000 | 00000000 | 00000000 |
@@ -28,7 +34,7 @@ public class TessractProtocol {
     */
 
     public static byte[] toProtocol(int action, int amount, int duration, int repeat, String rgb) {
-        Log.d(LOG_TAG, "toProtocol");
+        Log.d(LOG_TAG, "toProtocol: " + defaultActions[action] + " " + defaultAmounts[amount] + " " + defaultDurations[duration] + " " + defaultRepeats[repeat]);
 
         byte command = 0;
         byte red = 0;
@@ -56,5 +62,11 @@ public class TessractProtocol {
 
         byte[] data = new byte[]{command, red, green, blue};
         return data;
+    }
+
+    public static String colorToHex(int color) {
+        String rgb = String.format("%06X", (0xFFFFFF & color));
+        Log.d(LOG_TAG, "colorToHex: " + color + " -> " +rgb);
+        return rgb;
     }
 }
