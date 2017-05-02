@@ -324,13 +324,12 @@ public class BluetoothLeService extends Service {
     public  void disconnectBluetoothLe() {
         Log.d(LOG_TAG, "disconnectBluetoothLe");
 
-        if (bluetoothGatt == null) {
+        if (bluetoothGatt != null) {
             Log.d(LOG_TAG, "BluetoothGatt is null");
-            return;
+            bluetoothGatt.disconnect();
+            bluetoothGatt.close();
+            bluetoothGatt = null;
         }
-        bluetoothGatt.disconnect();
-        bluetoothGatt.close();
-        bluetoothGatt = null;
 
         this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISCONNECTED);
     }

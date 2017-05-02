@@ -1,6 +1,7 @@
 package com.solderbyte.tessract;
 
 import android.Manifest;
+import android.app.ActivityOptions;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -180,6 +181,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_SCAN);
             this.showProgressScan();
+        } else if (id == R.id.nav_device) {
+            Intent intent = new Intent(this, ActivityDevice.class);
+            ActivityOptions options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out);
+            this.startActivity(intent, options.toBundle());
         } else if (id == R.id.nav_help) {
 
         }
@@ -235,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Log.d(LOG_TAG, "createUiListeners");
 
         // Buttons
-        buttonConnect = (Button) findViewById(R.id.button_connect);
+        buttonConnect = (Button) this.findViewById(R.id.button_connect);
         buttonConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -254,17 +259,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         // ListViews
-        listViewApplications = (ListView) findViewById(R.id.listview_applications);
+        listViewApplications = (ListView) this.findViewById(R.id.listview_applications);
 
         // TextViews
-        textViewDevice = (TextView) findViewById(R.id.textview_device);
+        textViewDevice = (TextView) this.findViewById(R.id.textview_device);
 
         // Toolbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) this.findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         // Floating action button
-        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab = (FloatingActionButton) this.findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -274,13 +279,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         // Drawer
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = (DrawerLayout) this.findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
         // Navbar
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = (NavigationView) this.findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
 
@@ -1095,6 +1100,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
             Log.d(LOG_TAG, "serviceReceiver: " + message);
 
+            if (message == null) {
+                Log.w(LOG_TAG, "received null");
+                return;
+            }
             if (message.equals(Config.INTENT_SERVICE_BLUETOOTH_STARTED)) {
                 MainActivity.this.updateBluetoothStatus();
             }

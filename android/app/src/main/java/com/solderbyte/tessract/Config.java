@@ -8,6 +8,7 @@ public class Config {
     public static final String DEVICE_NAME = PACKAGE + ".device.name";
     public static final String DEVICE_ADDRESS = PACKAGE + ".device.address";
     public static final String DEVICE_STATE = PACKAGE + ".device.state";
+    public static final String DEVICE_COLOR = PACKAGE + ".device.color";
 
     public static final String INTENT = PACKAGE + ".intent";
 
