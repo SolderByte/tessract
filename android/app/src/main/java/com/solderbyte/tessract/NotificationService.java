@@ -1,7 +1,6 @@
 package com.solderbyte.tessract;
 
 
-import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.Notification;
 import android.content.BroadcastReceiver;
@@ -23,11 +22,9 @@ import android.view.ViewGroup;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -35,11 +32,10 @@ public class NotificationService extends NotificationListenerService {
     // Log tag
     private static final String LOG_TAG = "Tessract:Notification";
 
-    // Applications
-    private static ArrayList<String> applicationsAddedList = null;
-
     // Intent
     public static final String INTENT = "com.solderbyte.notification";
+    public static final String INTENT_SHUTDOWN = INTENT + ".shutdown";
+    public static final String INTENT_STARTED = INTENT + ".started";
     public static final String INTENT_MESSAGE = INTENT + ".message";
     public static final String INTENT_DATA = INTENT + ".data";
     public static final String INTENT_NOTIFICATION_POSTED = INTENT + ".posted";
@@ -71,7 +67,6 @@ public class NotificationService extends NotificationListenerService {
     private static String notificationIdBigText = "android:id/big_text";
     private static String notificationIdText= "android:id/text";
 
-
     @Override
     public void onCreate() {
         Log.d(LOG_TAG, "onCreate");
@@ -82,7 +77,7 @@ public class NotificationService extends NotificationListenerService {
         // Check notification listener service
         this.checkNotificationListenerService();
 
-        this.sendIntent(Config.INTENT_SERVICE, Config.INTENT_SERVICE_NOTIFICATION_STARTED);
+        this.sendIntent(INTENT, INTENT_STARTED);
         super.onCreate();
     }
 
@@ -329,9 +324,7 @@ public class NotificationService extends NotificationListenerService {
     private void registerReceivers() {
         Log.d(LOG_TAG, "registerReceivers");
 
-        this.registerReceiver(applicationReceiver, new IntentFilter(Config.INTENT_APPLICATION));
-        this.registerReceiver(notificationReceiver, new IntentFilter(Config.INTENT_NOTIFICATION));
-        this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
+        this.registerReceiver(shutdownReceiver, new IntentFilter(INTENT_SHUTDOWN));
     }
 
     private void sendIntent(String name, String message) {
@@ -351,30 +344,10 @@ public class NotificationService extends NotificationListenerService {
         this.sendBroadcast(msg);
     }
 
-    private void setApplicationsAdded(String applications) {
-        Log.d(LOG_TAG, "setApplicationsSaved: " + applications);
-        applicationsAddedList = new ArrayList<>();
-        JSONArray json;
-
-        try {
-            json = new JSONArray(applications);
-
-            for (int i = 0; i < json.length(); i++) {
-                String app = json.get(i).toString();
-                applicationsAddedList.add(app);
-            }
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Error: creating JSON " + e);
-            e.printStackTrace();
-        }
-    }
-
     private void unregisterReceivers() {
         Log.d(LOG_TAG, "unregisterReceivers");
 
         try {
-            this.unregisterReceiver(applicationReceiver);
-            this.unregisterReceiver(notificationReceiver);
             this.unregisterReceiver(shutdownReceiver);
         } catch (Exception e) {
             if (!e.getMessage().contains("Receiver not registered")) {
@@ -382,28 +355,6 @@ public class NotificationService extends NotificationListenerService {
             }
         }
     }
-
-    private BroadcastReceiver applicationReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
-            Log.d(LOG_TAG, "applicationReceiver: " + message);
-
-            if (message.equals(Config.INTENT_APPLICATION_SAVED)) {
-                String json = intent.getStringExtra(Config.INTENT_EXTRA_DATA);
-                NotificationService.this.setApplicationsAdded(json);
-            }
-        }
-    };
-
-    private BroadcastReceiver notificationReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
-            Log.d(LOG_TAG, "notificationReceiver: " + message);
-
-        }
-    };
 
     private BroadcastReceiver shutdownReceiver = new BroadcastReceiver() {
         @Override

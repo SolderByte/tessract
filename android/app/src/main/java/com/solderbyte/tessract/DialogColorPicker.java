@@ -37,11 +37,7 @@ public class DialogColorPicker extends DialogFragment {
     private static ArrayList<EditText> editTexts = null;
 
     // Keys
-    public static String colorKey = "color";
-
-    // Strings
-    private static String positiveButton = "Select";
-    private static String negativeButton = "Cancel";
+    public static String COLOR_KEY = "color";
 
     // Listener
     public interface OnColorSelectedListener {
@@ -53,11 +49,6 @@ public class DialogColorPicker extends DialogFragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        try {
-            this.listener = (OnColorSelectedListener) activity;
-        } catch (final ClassCastException e) {
-            throw new ClassCastException(activity.toString() + " must implement listener");
-        }
     }
 
     public DialogColorPicker() {}
@@ -74,7 +65,7 @@ public class DialogColorPicker extends DialogFragment {
         int color = COLOR_DEFAULT;
         Bundle bundle = this.getArguments();
         if (bundle != null) {
-            color = bundle.getInt(colorKey);
+            color = bundle.getInt(COLOR_KEY);
         }
         final int red = Color.red(color);
         final int green = Color.green(color);
@@ -92,19 +83,23 @@ public class DialogColorPicker extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(this.getActivity());
         this.setCancelable(false);
 
-        builder.setPositiveButton(positiveButton, new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(this.getString(R.string.button_select), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Log.d(LOG_TAG, "showDialogColorPicker: " + colors.get(COLOR_RED) + " " + colors.get(COLOR_GREEN) + " " + colors.get(COLOR_BLUE));
 
                 int color = Color.rgb(colors.get(COLOR_RED), colors.get(COLOR_GREEN), colors.get(COLOR_BLUE));
-                listener.onColorSelected(color);
+
+                if (listener != null) {
+                    listener.onColorSelected(color);
+                }
+
 
                 dialog.dismiss();
             }
         });
 
-        builder.setNegativeButton(negativeButton, new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(this.getString(R.string.button_cancel), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Log.d(LOG_TAG, "showDialogColorPicker: cancel");
@@ -149,6 +144,10 @@ public class DialogColorPicker extends DialogFragment {
         this.updateColorPicker(viewColor, seekBarBlue, editTextBlue, editTextHex, COLOR_BLUE);;
 
         return builder.create();
+    }
+
+    public void setOnColorSelectedListener(OnColorSelectedListener onColorSelectedListener) {
+        this.listener = onColorSelectedListener;
     }
 
     private void updateColorPicker(final View viewColor, SeekBar seekBar, final EditText editText, final EditText editTextHex, final int index) {

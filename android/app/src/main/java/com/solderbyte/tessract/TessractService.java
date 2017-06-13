@@ -18,12 +18,14 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +38,36 @@ public class TessractService extends Service {
     // Application
     private static List<ApplicationInfo> installedApplications = null;
     private static ArrayList<String> filteredApplications = null;
+    private static JSONArray fApplications = null;
+
+    // Hashmaps
+    public static HashMap<Integer, String> SERVICE_FLAGS = new HashMap<Integer, String>() {{
+        put(0, "START_STICKY_COMPATIBILITY");
+        put(1, "START_FLAG_REDELIVERY, START_STICKY");
+        put(2, "START_FLAG_RETRY, START_NOT_STICKY");
+        put(3, "START_REDELIVER_INTENT");
+        put(15, "START_CONTINUATION_MASK");
+    }};
+
+    // Intents
+    public static final String INTENT = "com.solderbyte.service";
+    public static final String INTENT_SHUTDOWN = INTENT + ".shutdown";
+    public static final String INTENT_STARTED = INTENT + ".started";
+    public static final String INTENT_EXTRA_MSG = INTENT + ".message";
+    public static final String INTENT_EXTRA_DATA = INTENT + ".data";
+    public static final String INTENT_APPLICATION = INTENT + ".application";
+    public static final String INTENT_APPLICATION_LIST = INTENT_APPLICATION + ".list";
+    public static final String INTENT_APPLICATION_LISTED = INTENT_APPLICATION + ".listed";
+
+    public static final String JSON = INTENT + ".json";
+    public static final String JSON_APPLICATIONS = "applications";
+    public static final String JSON_PACKAGE_NAME = "packageName";
+    public static final String JSON_APPLICATION_NAME = "applicationName";
+    public static final String JSON_APPLICATION_COLOR = "applicationColor";
+    public static final String JSON_DEVICE_NAME = "deviceName";
+    public static final String JSON_DEVICE_ADDRESS = "deviceAddress";
+    public static final String JSON_DEVICE_TYPE = "deviceType";
+    public static final String JSON_DEVICE_BOND = "deviceBond";
 
     // Notification
     private static int notificationId = 873; // (tessract) sum each decimal value of each character
@@ -80,7 +112,7 @@ public class TessractService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(LOG_TAG, "onStartCommand: flag: " + Config.SERVICE_FLAGS.get(flags) + ", ID: " + startId);
+        Log.d(LOG_TAG, "onStartCommand: flag: " + SERVICE_FLAGS.get(flags) + ", ID: " + startId);
 
         // Register receivers
         this.registerReceivers();
@@ -95,7 +127,7 @@ public class TessractService extends Service {
         packageManager = this.getPackageManager();
 
         this.startForeground(notificationId, notification);
-        this.sendIntent(Config.INTENT_SERVICE, Config.INTENT_SERVICE_TESSRACT_STARTED);
+        this.sendIntent(INTENT_STARTED, INTENT_STARTED);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -112,15 +144,15 @@ public class TessractService extends Service {
     public void clearNotification() {
         Log.d(LOG_TAG, "clearNotification");
 
-        NotificationManager nManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
-        nManager.cancel(notificationId);
+        NotificationManager notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.cancel(notificationId);
     }
 
     public void createNotification(boolean connected) {
         Log.d(LOG_TAG, "createNotification: " + connected);
 
         // Intents
-        Intent shutdown =  new Intent(Config.INTENT_SHUTDOWN);
+        Intent shutdown =  new Intent(INTENT_SHUTDOWN);
         Intent startActivity = new Intent(this, MainActivity.class);
         PendingIntent startIntent = PendingIntent.getActivity(this, 0, startActivity, PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent shutdownIntent = PendingIntent.getBroadcast(this, 0, shutdown, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -145,13 +177,13 @@ public class TessractService extends Service {
         // Notification actions
         nBuilder.addAction(R.mipmap.ic_launcher, getString(R.string.notification_stop), shutdownIntent);
         if (connected) {
-            Intent dIntent = new Intent(Config.INTENT_BLUETOOTH);
-            dIntent.putExtra(Config.INTENT_EXTRA_MSG, Config.INTENT_BLUETOOTH_DISCONNECT);
+            Intent dIntent = new Intent(BluetoothLeService.INTENT);
+            dIntent.putExtra(INTENT_EXTRA_MSG, BluetoothLeService.INTENT_BLE_DISCONNECT);
             PendingIntent pConnect = PendingIntent.getBroadcast(this, 0, dIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             nBuilder.addAction(R.mipmap.ic_launcher, getString(R.string.notification_disconnect), pConnect);
         } else {
-            Intent cIntent = new Intent(Config.INTENT_BLUETOOTH);
-            cIntent.putExtra(Config.INTENT_EXTRA_MSG, Config.INTENT_BLUETOOTH_CONNECT);
+            Intent cIntent = new Intent(BluetoothLeService.INTENT);
+            cIntent.putExtra(INTENT_EXTRA_MSG, BluetoothLeService.INTENT_BLE_CONNECT);
             PendingIntent pConnect = PendingIntent.getBroadcast(this, 0, cIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             nBuilder.addAction(R.mipmap.ic_launcher, getString(R.string.notification_connect), pConnect);
         }
@@ -167,6 +199,7 @@ public class TessractService extends Service {
 
         // Get list of installed applications
         filteredApplications = new ArrayList<String>();
+        fApplications =  new JSONArray();
         if (installedApplications == null) {
             installedApplications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
         }
@@ -182,18 +215,20 @@ public class TessractService extends Service {
 
                 JSONObject json = new JSONObject();
                 try {
-                    json.put(Config.JSON_PACKAGE_NAME, app.packageName);
-                    json.put(Config.JSON_APPLICATION_NAME, appName);
+                    json.put(JSON_PACKAGE_NAME, app.packageName);
+                    json.put(JSON_APPLICATION_NAME, appName);
                 } catch (JSONException e) {
                     Log.e(LOG_TAG, "Error: creating JSON " + e);
                     e.printStackTrace();
                 }
                 filteredApplications.add(json.toString());
+                fApplications.put(json.toString());
             }
         }
 
         Log.d(LOG_TAG, "Installed application: " + filteredApplications.size());
-        this.sendIntent(Config.INTENT_APPLICATION, Config.INTENT_APPLICATION_LISTED, filteredApplications);
+        Log.d(LOG_TAG, "fApplications: " + fApplications.length());
+        this.sendIntent(TessractService.INTENT_APPLICATION, TessractService.INTENT_APPLICATION_LISTED, filteredApplications);
     }
 
     private void onNotificationPosted(String data) {
@@ -210,30 +245,29 @@ public class TessractService extends Service {
         }
 
         // Get application settings
-        int appColor = Config.COLOR_DEFAULT;
+        int appColor = DialogColorPicker.COLOR_DEFAULT;
         rgb = TessractProtocol.colorToHex(appColor);
 
         // Convert data into bytes
         byte[] bytes = TessractProtocol.toProtocol(2, 2, 2, 0, rgb);
 
-        this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_WRITE, bytes);
+        this.sendIntent(BluetoothLeService.INTENT, BluetoothLeService.INTENT_BLE_WRITE, bytes);
     }
 
     private void registerReceivers() {
         Log.d(LOG_TAG, "registerReceivers");
 
-        this.registerReceiver(applicationReceiver, new IntentFilter(Config.INTENT_APPLICATION));
-        this.registerReceiver(bluetoothLeReceiver, new IntentFilter(Config.INTENT_BLUETOOTH));
+        this.registerReceiver(applicationReceiver, new IntentFilter(TessractService.INTENT_APPLICATION));
+        this.registerReceiver(bluetoothLeReceiver, new IntentFilter(BluetoothLeService.INTENT));
         this.registerReceiver(notificationReceiver, new IntentFilter(NotificationService.INTENT));
-        this.registerReceiver(serviceReceiver, new IntentFilter(Config.INTENT_SERVICE));
-        this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
+        this.registerReceiver(shutdownReceiver, new IntentFilter(TessractService.INTENT_SHUTDOWN));
     }
 
     public void sendIntent(String name, String message) {
         Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
 
         Intent msg = new Intent(name);
-        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        msg.putExtra(TessractService.INTENT_EXTRA_MSG, message);
         this.sendBroadcast(msg);
     }
 
@@ -241,8 +275,8 @@ public class TessractService extends Service {
         Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
 
         Intent msg = new Intent(name);
-        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
-        msg.putExtra(Config.INTENT_EXTRA_DATA, data);
+        msg.putExtra(TessractService.INTENT_EXTRA_MSG, message);
+        msg.putExtra(TessractService.INTENT_EXTRA_DATA, data);
         this.sendBroadcast(msg);
     }
 
@@ -250,8 +284,8 @@ public class TessractService extends Service {
         Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
 
         Intent msg = new Intent(name);
-        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
-        msg.putExtra(Config.INTENT_EXTRA_DATA, data);
+        msg.putExtra(TessractService.INTENT_EXTRA_MSG, message);
+        msg.putExtra(TessractService.INTENT_EXTRA_DATA, data);
         this.sendBroadcast(msg);
     }
 
@@ -259,8 +293,8 @@ public class TessractService extends Service {
         Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
 
         Intent msg = new Intent(name);
-        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
-        msg.putStringArrayListExtra(Config.INTENT_EXTRA_DATA, data);
+        msg.putExtra(TessractService.INTENT_EXTRA_MSG, message);
+        msg.putStringArrayListExtra(TessractService.INTENT_EXTRA_DATA, data);
         this.sendBroadcast(msg);
     }
 
@@ -280,7 +314,6 @@ public class TessractService extends Service {
             this.unregisterReceiver(applicationReceiver);
             this.unregisterReceiver(bluetoothLeReceiver);
             this.unregisterReceiver(notificationReceiver);
-            this.unregisterReceiver(serviceReceiver);
             this.unregisterReceiver(shutdownReceiver);
         } catch (Exception e) {
             if (!e.getMessage().contains("Receiver not registered")) {
@@ -304,10 +337,13 @@ public class TessractService extends Service {
     private BroadcastReceiver applicationReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
+            String message = intent.getStringExtra(TessractService.INTENT_EXTRA_MSG);
             Log.d(LOG_TAG, "applicationReceiver: " + message);
 
-            if (message.equals(Config.INTENT_APPLICATION_LIST)) {
+            if (message == null) {
+                return;
+            }
+            if (message.equals(TessractService.INTENT_APPLICATION_LIST)) {
                 TessractService.this.listApplications();
             }
         }
@@ -316,13 +352,16 @@ public class TessractService extends Service {
     private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
+            String message = intent.getStringExtra(INTENT_EXTRA_MSG);
             Log.d(LOG_TAG, "bluetoothLeReceiver: " + message);
 
-            if (message.equals(Config.INTENT_BLUETOOTH_CONNECTED)) {
+            if (message == null) {
+                return;
+            }
+            if (message.equals(BluetoothLeService.INTENT_BLE_CONNECTED)) {
                 TessractService.this.createNotification(true);
             }
-            if (message.equals(Config.INTENT_BLUETOOTH_DISCONNECTED)) {
+            if (message.equals(BluetoothLeService.INTENT_BLE_DISCONNECTED)) {
                 TessractService.this.createNotification(false);
             }
         }
@@ -341,14 +380,6 @@ public class TessractService extends Service {
         }
     };
 
-    private BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
-            Log.d(LOG_TAG, "serviceReceiver: " + message);
-        }
-    };
-
     private BroadcastReceiver shutdownReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -356,6 +387,9 @@ public class TessractService extends Service {
 
             // Unregister Receivers
             TessractService.this.unregisterReceivers();
+
+            // Send shutdown intents
+            TessractService.this.sendIntent(MainActivity.INTENT_SHUTDOWN, MainActivity.INTENT_SHUTDOWN);
 
             // Clear notification
             TessractService.this.clearNotification();

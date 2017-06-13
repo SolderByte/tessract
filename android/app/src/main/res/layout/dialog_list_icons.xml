@@ -6,10 +6,10 @@
     android:layout_height="match_parent" >
 
     <ImageView
+        android:id="@+id/dialog_list_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:srcCompat="@android:drawable/ic_menu_gallery"
-        android:id="@+id/dialog_list_icon"
         android:background="?android:attr/activatedBackgroundIndicator"
         android:paddingLeft="?android:attr/listPreferredItemPaddingLeft"
         android:paddingRight="?android:attr/listPreferredItemPaddingRight"
@@ -17,10 +17,10 @@
         android:maxHeight="?attr/listPreferredItemHeight" />
 
     <TextView
+        android:id="@+id/dialog_list_text"
         android:text="TextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/dialog_list_text"
         android:minHeight="?attr/listPreferredItemHeight"
         android:maxHeight="?attr/listPreferredItemHeight"
         android:background="?android:attr/activatedBackgroundIndicator"
@@ -28,4 +28,5 @@
         android:textColor="?android:attr/textColorAlertDialogListItem"
         android:gravity="center_vertical"
         android:ellipsize="marquee" />
+
 </LinearLayout>

@@ -1,0 +1,139 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.solderbyte.tessract.FragmentNotificationsSettings">
+
+    <!-- Action -->
+    <TextView
+        android:id="@+id/textview_action"
+        android:text="@string/textview_action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/listPreferredItemHeight"
+        android:maxHeight="?attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"  />
+
+    <TextView
+        android:id="@+id/textview_action_selected"
+        android:text="@string/textview_none"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/listPreferredItemHeight"
+        android:maxHeight="?attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        android:layout_alignBottom="@+id/textview_action"
+        android:layout_alignParentEnd="true"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#eeeeee"
+        android:layout_below="@+id/textview_action" />
+
+    <!-- Amount -->
+    <TextView
+        android:id="@+id/textview_amount"
+        android:text="@string/textview_amount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/listPreferredItemHeight"
+        android:maxHeight="?attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:layout_below="@+id/textview_action"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/textview_amount_selected"
+        android:text="@string/textview_none"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/listPreferredItemHeight"
+        android:maxHeight="?attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        android:layout_alignBottom="@+id/textview_amount"
+        android:layout_alignParentEnd="true"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#eeeeee"
+        android:layout_below="@+id/textview_amount" />
+
+    <!-- Duration -->
+    <TextView
+        android:id="@+id/textview_duration"
+        android:text="@string/textview_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/listPreferredItemHeight"
+        android:maxHeight="?attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:layout_below="@+id/textview_amount"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/textview_duration_selected"
+        android:text="@string/textview_none"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/listPreferredItemHeight"
+        android:maxHeight="?attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        android:layout_alignBottom="@+id/textview_duration"
+        android:layout_alignParentEnd="true"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#eeeeee"
+        android:layout_below="@+id/textview_duration" />
+
+    <!-- Repeat -->
+    <TextView
+        android:id="@+id/textview_repeat"
+        android:text="@string/textview_repeat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/listPreferredItemHeight"
+        android:maxHeight="?attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:layout_below="@+id/textview_duration"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/textview_repeat_selected"
+        android:text="@string/textview_none"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/listPreferredItemHeight"
+        android:maxHeight="?attr/listPreferredItemHeight"
+        android:gravity="center_vertical"
+        android:layout_alignBottom="@+id/textview_repeat"
+        android:layout_alignParentEnd="true"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#eeeeee"
+        android:layout_below="@+id/textview_repeat" />
+
+</RelativeLayout>

@@ -27,7 +27,6 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -49,23 +48,23 @@ public class BluetoothLeService extends Service {
     private static String bluetoothAddress;
 
     // Hashmaps
-    public static HashMap<Integer, String> callbackTypes = new HashMap<Integer, String>() {{
+    private static HashMap<Integer, String> callbackTypes = new HashMap<Integer, String>() {{
         put(1, "CALLBACK_TYPE_ALL_MATCHES");
         put(2, "CALLBACK_TYPE_FIRST_MATCH");
         put(4, "CALLBACK_TYPE_MATCH_LOST");
     }};
-    public static HashMap<Integer, String> deviceBonds = new HashMap<Integer, String>() {{
+    private static HashMap<Integer, String> deviceBonds = new HashMap<Integer, String>() {{
         put(10, "BOND_NONE");
         put(11, "BOND_BONDING");
         put(12, "BOND_BONDED");
     }};
-    public static HashMap<Integer, String> deviceTypes = new HashMap<Integer, String>() {{
+    private static HashMap<Integer, String> deviceTypes = new HashMap<Integer, String>() {{
         put(0, "DEVICE_TYPE_UNKNOWN");
         put(1, "DEVICE_TYPE_CLASSIC");
         put(2, "DEVICE_TYPE_LE");
         put(3, "DEVICE_TYPE_DUAL");
     }};
-    public static HashMap<Integer, String> gattCharacteristicPermission = new HashMap<Integer, String>() {{
+    private static HashMap<Integer, String> gattCharacteristicPermission = new HashMap<Integer, String>() {{
         put(1, "PERMISSION_READ");
         put(2, "PERMISSION_READ_ENCRYPTED");
         put(4, "PERMISSION_READ_ENCRYPTED_MITM");
@@ -75,7 +74,7 @@ public class BluetoothLeService extends Service {
         put(128, "PERMISSION_WRITE_SIGNED");
         put(256, "PERMISSION_WRITE_SIGNED_MITM");
     }};
-    public static HashMap<Integer, String> gattCharacteristicProperty = new HashMap<Integer, String>() {{
+    private static HashMap<Integer, String> gattCharacteristicProperty = new HashMap<Integer, String>() {{
         put(1, "PROPERTY_BROADCAST");
         put(2, "PROPERTY_READ");
         put(4, "PROPERTY_WRITE_NO_RESPONSE");
@@ -85,22 +84,22 @@ public class BluetoothLeService extends Service {
         put(64, "PROPERTY_SIGNED_WRITE");
         put(128, "PROPERTY_EXTENDED_PROPS");
     }};
-    public static HashMap<Integer, String> gattCharacteristicWriteType = new HashMap<Integer, String>() {{
+    private static HashMap<Integer, String> gattCharacteristicWriteType = new HashMap<Integer, String>() {{
         put(1, "WRITE_TYPE_NO_RESPONSE");
         put(2, "WRITE_TYPE_DEFAULT");
         put(4, "WRITE_TYPE_SIGNED");
     }};
-    public static HashMap<Integer, String> gattServiceType = new HashMap<Integer, String>() {{
+    private static HashMap<Integer, String> gattServiceType = new HashMap<Integer, String>() {{
         put(0, "SERVICE_TYPE_PRIMARY");
         put(1, "SERVICE_TYPE_SECONDARY");
     }};
-    public static HashMap<Integer, String> gattState = new HashMap<Integer, String>() {{
+    private static HashMap<Integer, String> gattState = new HashMap<Integer, String>() {{
         put(0, "STATE_DISCONNECTED");
         put(1, "STATE_CONNECTING");
         put(2, "STATE_CONNECTED");
         put(3, "STATE_DISCONNECTING");
     }};
-    public static HashMap<Integer, String> gattStatus = new HashMap<Integer, String>() {{
+    private static HashMap<Integer, String> gattStatus = new HashMap<Integer, String>() {{
         put(0, "GATT_SUCCESS");
         put(2, "GATT_READ_NOT_PERMITTED");
         put(3, "GATT_WRITE_NOT_PERMITTED");
@@ -115,6 +114,39 @@ public class BluetoothLeService extends Service {
         put(143, "GATT_CONNECTION_CONGESTED");
         put(257, "GATT_FAILURE");
     }};
+    public static HashMap<Integer, String> DEVICE_BONDS = new HashMap<Integer, String>() {{
+        put(10, "BOND_NONE");
+        put(11, "BOND_BONDING");
+        put(12, "BOND_BONDED");
+    }};
+    public static HashMap<Integer, String> SERVICE_FLAGS = new HashMap<Integer, String>() {{
+        put(0, "START_STICKY_COMPATIBILITY");
+        put(1, "START_FLAG_REDELIVERY, START_STICKY");
+        put(2, "START_FLAG_RETRY, START_NOT_STICKY");
+        put(3, "START_REDELIVER_INTENT");
+        put(15, "START_CONTINUATION_MASK");
+    }};
+
+    // Intents
+    public static String INTENT = "com.solderbyte.bluetooth";
+    public static String INTENT_SHUTDOWN = INTENT + ".shutdown";
+    public static String INTENT_STARTED = INTENT + ".started";
+    public static String INTENT_EXTRA_MSG = INTENT + ".message";
+    public static String INTENT_EXTRA_DATA = INTENT + ".data";
+    public static String INTENT_BLE = INTENT + ".ble";
+    public static String INTENT_BLE_SCAN = INTENT_BLE + ".scan";
+    public static String INTENT_BLE_SCANNED = INTENT_BLE + ".scanned";
+    public static String INTENT_BLE_DEVICE = INTENT_BLE + ".device";
+    public static String INTENT_BLE_CONNECT = INTENT_BLE + ".connect";
+    public static String INTENT_BLE_CONNECTED = INTENT_BLE + ".connected";
+    public static String INTENT_BLE_CONNECTING = INTENT_BLE + ".connecting";
+    public static String INTENT_BLE_DISCONNECT = INTENT_BLE + ".disconnect";
+    public static String INTENT_BLE_DISCONNECTED = INTENT_BLE + ".disconnected";
+    public static String INTENT_BLE_CHARACTERISTIC = INTENT_BLE + ".characteristic";
+    public static String INTENT_BLE_ENABLED = INTENT_BLE + ".enabled";
+    public static String INTENT_BLE_DISABLED = INTENT_BLE + ".disabled";
+    public static String INTENT_BLE_STATUS = INTENT_BLE + ".status";
+    public static String INTENT_BLE_WRITE = INTENT_BLE + ".write";
 
     // Pin
     private static String pin = "123456";
@@ -130,6 +162,12 @@ public class BluetoothLeService extends Service {
     private static boolean isEnabled = false;
     private static boolean isScanning = false;
     private static boolean isSending = false;
+
+    // Strings
+    public static final String JSON_DEVICE_NAME = "deviceName";
+    public static final String JSON_DEVICE_ADDRESS = "deviceAddress";
+    public static final String JSON_DEVICE_TYPE = "deviceType";
+    public static final String JSON_DEVICE_BOND = "deviceBond";
 
     // Transport
     private static int bluetoothMtu = 20;
@@ -156,7 +194,7 @@ public class BluetoothLeService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(LOG_TAG, "onStartCommand: flag: " + Config.SERVICE_FLAGS.get(flags) + ", ID: " + startId);
+        Log.d(LOG_TAG, "onStartCommand: flag: " + SERVICE_FLAGS.get(flags) + ", ID: " + startId);
 
         // Initialize sets
         scannedDevices = new LinkedHashSet<BluetoothDevice>();
@@ -167,7 +205,7 @@ public class BluetoothLeService extends Service {
         // Setup bluetooth
         this.setupBluetooth();
 
-        this.sendIntent(Config.INTENT_SERVICE, Config.INTENT_SERVICE_BLUETOOTH_STARTED);
+        this.sendIntent(INTENT, INTENT_STARTED);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -203,14 +241,14 @@ public class BluetoothLeService extends Service {
                 isConnected = true;
 
                 //BluetoothLeService.this.stopReconnectBle();
-                BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CONNECTED);
+                BluetoothLeService.this.sendIntent(INTENT, INTENT_BLE_CONNECTED);
 
                 bluetoothGatt.discoverServices();
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.d(LOG_TAG, "Disconnected");
                 isConnected = false;
 
-                BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISCONNECTED);
+                BluetoothLeService.this.sendIntent(INTENT, INTENT_BLE_DISCONNECTED);
 
                 //if(!isReconnecting) {
                 //    BluetoothLeService.this.reconnectBle();
@@ -242,7 +280,7 @@ public class BluetoothLeService extends Service {
                         bluetoothGattDescriptor.setValue(bluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                         gatt.writeDescriptor(bluetoothGattDescriptor);
 
-                        BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CHARACTERISTIC);
+                        BluetoothLeService.this.sendIntent(INTENT, INTENT_BLE_CHARACTERISTIC);
                     }
 
                     for (BluetoothGattCharacteristic gattCharacteristic : gattService.getCharacteristics()) {
@@ -268,8 +306,18 @@ public class BluetoothLeService extends Service {
         }
     };
 
-    public void connectBluetoothLe(String address) {
-        Log.d(LOG_TAG, "connectBluetoothLe: " + address);
+    public void connectBluetoothLe(String data) {
+        Log.d(LOG_TAG, "connectBluetoothLe: " + data);
+        String address = null;
+
+        try {
+            // Create JSON
+            JSONObject json = new JSONObject(data);
+            address = json.getString(JSON_DEVICE_ADDRESS);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "connectBluetoothLe Error: creating JSON " + e);
+            e.printStackTrace();
+        }
 
         if (bluetoothAdapter == null || address == null) {
             Log.d(LOG_TAG, "BluetoothAdapter is null");
@@ -283,7 +331,7 @@ public class BluetoothLeService extends Service {
         // Force a connection
         if (bluetoothGatt != null) {
             if (bluetoothGatt.connect()) {
-                this.connectBluetoothLeForce(address);
+                this.connectBluetoothLeForce(data);
                 return;
             } else {
                 Log.d(LOG_TAG, "Could not force connect");
@@ -306,16 +354,26 @@ public class BluetoothLeService extends Service {
 
         bluetoothGatt = device.connectGatt(this, false, bluetoothGattCallback);
 
-        this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CONNECTING);
+        this.sendIntent(INTENT, INTENT_BLE_CONNECTING);
     }
 
-    public void connectBluetoothLeForce(String address) {
-        Log.d(LOG_TAG, "connectBluetoothLeForce: " + address);
+    public void connectBluetoothLeForce(String data) {
+        Log.d(LOG_TAG, "connectBluetoothLeForce: " + data);
+        String address = null;
+
+        try {
+            // Create JSON
+            JSONObject json = new JSONObject(data);
+            address = json.getString(JSON_DEVICE_ADDRESS);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "connectBluetoothLe Error: creating JSON " + e);
+            e.printStackTrace();
+        }
         bluetoothAddress = address;
 
         if (bluetoothAddress != null) {
             this.disconnectBluetoothLe();
-            this.connectBluetoothLe(address);
+            this.connectBluetoothLe(data);
         } else {
             Log.d(LOG_TAG, "bluetoothAddress is null");
         }
@@ -325,13 +383,14 @@ public class BluetoothLeService extends Service {
         Log.d(LOG_TAG, "disconnectBluetoothLe");
 
         if (bluetoothGatt != null) {
-            Log.d(LOG_TAG, "BluetoothGatt is null");
             bluetoothGatt.disconnect();
             bluetoothGatt.close();
             bluetoothGatt = null;
+        } else {
+            Log.d(LOG_TAG, "BluetoothGatt is null");
         }
 
-        this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISCONNECTED);
+        this.sendIntent(INTENT, INTENT_BLE_DISCONNECTED);
     }
 
     public void enableBluetooth() {
@@ -357,16 +416,16 @@ public class BluetoothLeService extends Service {
 
                     JSONObject json = new JSONObject();
                     try {
-                        json.put(Config.JSON_DEVICE_NAME, device.getName());
-                        json.put(Config.JSON_DEVICE_ADDRESS, device.getAddress());
-                        json.put(Config.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
-                        json.put(Config.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
+                        json.put(BluetoothLeService.JSON_DEVICE_NAME, device.getName());
+                        json.put(BluetoothLeService.JSON_DEVICE_ADDRESS, device.getAddress());
+                        json.put(BluetoothLeService.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
+                        json.put(BluetoothLeService.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
                     } catch (JSONException e) {
                         Log.e(LOG_TAG, "Error: creating JSON " + e);
                         e.printStackTrace();
                     }
 
-                    BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, json.toString());
+                    BluetoothLeService.this.sendIntent(BluetoothLeService.INTENT, BluetoothLeService.INTENT_BLE_DEVICE, json.toString());
                 }
             }
             else {
@@ -381,17 +440,17 @@ public class BluetoothLeService extends Service {
         Log.d(LOG_TAG, "getBluetoothStatus");
 
         if (isConnected) {
-            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_CONNECTED);
+            this.sendIntent(INTENT, INTENT_BLE_CONNECTED);
         } else {
-            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISCONNECTED);
+            this.sendIntent(INTENT, INTENT_BLE_DISCONNECTED);
         }
     }
 
     private void registerReceivers() {
         Log.d(LOG_TAG, "registerReceivers");
 
-        this.registerReceiver(bluetoothLeReceiver, new IntentFilter(Config.INTENT_BLUETOOTH));
-        this.registerReceiver(shutdownReceiver, new IntentFilter(Config.INTENT_SHUTDOWN));
+        this.registerReceiver(bluetoothLeReceiver, new IntentFilter(INTENT));
+        this.registerReceiver(shutdownReceiver, new IntentFilter(INTENT_SHUTDOWN));
     }
 
     public void scanBluetooth() {
@@ -434,7 +493,6 @@ public class BluetoothLeService extends Service {
                             bluetoothLeScanner.stopScan(bluetoothScanCallback);
                         } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                             Log.d(LOG_TAG, "startLeScan stopped: Android < 5.0");
-
                             bluetoothAdapter.stopLeScan(bluetoothLeScanCallback);
                         } else {
                             Log.d(LOG_TAG, "startDiscovery stopped: Android other");
@@ -443,7 +501,7 @@ public class BluetoothLeService extends Service {
                             BluetoothLeService.this.unregisterReceiver(scanReceiver);
                         }
 
-                        BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_SCANNED);
+                        BluetoothLeService.this.sendIntent(BluetoothLeService.INTENT, BluetoothLeService.INTENT_BLE_SCANNED);
                     }
                 }, scanPeriod);
 
@@ -459,7 +517,7 @@ public class BluetoothLeService extends Service {
         Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
 
         Intent msg = new Intent(name);
-        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
+        msg.putExtra(INTENT_EXTRA_MSG, message);
         this.sendBroadcast(msg);
     }
 
@@ -467,8 +525,8 @@ public class BluetoothLeService extends Service {
         Log.v(LOG_TAG, "sendIntent:" + name + " : " + message);
 
         Intent msg = new Intent(name);
-        msg.putExtra(Config.INTENT_EXTRA_MSG, message);
-        msg.putExtra(Config.INTENT_EXTRA_DATA, data);
+        msg.putExtra(INTENT_EXTRA_MSG, message);
+        msg.putExtra(INTENT_EXTRA_DATA, data);
         this.sendBroadcast(msg);
     }
 
@@ -479,11 +537,11 @@ public class BluetoothLeService extends Service {
         if (isEnabled) {
             Log.d(LOG_TAG, "BluetoothAdapter is enabled");
 
-            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_ENABLED);
+            this.sendIntent(INTENT, INTENT_BLE_ENABLED);
         } else {
             Log.d(LOG_TAG, "bluetoothAdapter is not enabled");
 
-            this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DISABLED);
+            this.sendIntent(INTENT, INTENT_BLE_DISABLED);
         }
     }
 
@@ -572,16 +630,16 @@ public class BluetoothLeService extends Service {
 
                 JSONObject json = new JSONObject();
                 try {
-                    json.put(Config.JSON_DEVICE_NAME, device.getName());
-                    json.put(Config.JSON_DEVICE_ADDRESS, device.getAddress());
-                    json.put(Config.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
-                    json.put(Config.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
+                    json.put(BluetoothLeService.JSON_DEVICE_NAME, device.getName());
+                    json.put(BluetoothLeService.JSON_DEVICE_ADDRESS, device.getAddress());
+                    json.put(BluetoothLeService.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
+                    json.put(BluetoothLeService.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
                 } catch (JSONException e) {
                     Log.e(LOG_TAG, "Error: creating JSON " + e);
                     e.printStackTrace();
                 }
 
-                BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, json.toString());
+                BluetoothLeService.this.sendIntent(BluetoothLeService.INTENT, BluetoothLeService.INTENT_BLE_DEVICE, json.toString());
             }
         }
     };
@@ -600,16 +658,16 @@ public class BluetoothLeService extends Service {
 
                 JSONObject json = new JSONObject();
                 try {
-                    json.put(Config.JSON_DEVICE_NAME, device.getName());
-                    json.put(Config.JSON_DEVICE_ADDRESS, device.getAddress());
-                    json.put(Config.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
-                    json.put(Config.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
+                    json.put(BluetoothLeService.JSON_DEVICE_NAME, device.getName());
+                    json.put(BluetoothLeService.JSON_DEVICE_ADDRESS, device.getAddress());
+                    json.put(BluetoothLeService.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
+                    json.put(BluetoothLeService.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
                 } catch (JSONException e) {
                     Log.e(LOG_TAG, "Error: creating JSON " + e);
                     e.printStackTrace();
                 }
 
-                BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, json.toString());
+                BluetoothLeService.this.sendIntent(BluetoothLeService.INTENT, BluetoothLeService.INTENT_BLE_DEVICE, json.toString());
             }
         }
     };
@@ -630,16 +688,16 @@ public class BluetoothLeService extends Service {
 
                     JSONObject json = new JSONObject();
                     try {
-                        json.put(Config.JSON_DEVICE_NAME, device.getName());
-                        json.put(Config.JSON_DEVICE_ADDRESS, device.getAddress());
-                        json.put(Config.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
-                        json.put(Config.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
+                        json.put(BluetoothLeService.JSON_DEVICE_NAME, device.getName());
+                        json.put(BluetoothLeService.JSON_DEVICE_ADDRESS, device.getAddress());
+                        json.put(BluetoothLeService.JSON_DEVICE_TYPE, deviceTypes.get(device.getType()));
+                        json.put(BluetoothLeService.JSON_DEVICE_BOND, deviceBonds.get(device.getBondState()));
                     } catch (JSONException e) {
                         Log.e(LOG_TAG, "Error: creating JSON " + e);
                         e.printStackTrace();
                     }
 
-                    BluetoothLeService.this.sendIntent(Config.INTENT_BLUETOOTH, Config.INTENT_BLUETOOTH_DEVICE, json.toString());
+                    BluetoothLeService.this.sendIntent(BluetoothLeService.INTENT, BluetoothLeService.INTENT_BLE_DEVICE, json.toString());
                 }
             }
         }
@@ -648,26 +706,29 @@ public class BluetoothLeService extends Service {
     private BroadcastReceiver bluetoothLeReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            String message = intent.getStringExtra(Config.INTENT_EXTRA_MSG);
+            String message = intent.getStringExtra(BluetoothLeService.INTENT_EXTRA_MSG);
             Log.d(LOG_TAG, "bluetoothLeReceiver: " + message);
 
-            if (message.equals(Config.INTENT_BLUETOOTH_CONNECT)) {
-                String address = intent.getStringExtra(Config.INTENT_EXTRA_DATA);
-                BluetoothLeService.this.connectBluetoothLe(address);
+            if (message == null) {
+                return;
             }
-            if (message.equals(Config.INTENT_BLUETOOTH_DISCONNECT)) {
-                BluetoothLeService.this.disconnectBluetoothLe();
-            }
-            if (message.equals(Config.INTENT_BLUETOOTH_SCAN)) {
+            if (message.equals(BluetoothLeService.INTENT_BLE_SCAN)) {
                 BluetoothLeService.this.getBluetoothPaired();
                 BluetoothLeService.this.scanBluetooth();
             }
-            if (message.equals(Config.INTENT_BLUETOOTH_STATUS)) {
+            if (message.equals(INTENT_BLE_CONNECT)) {
+                String data = intent.getStringExtra(INTENT_EXTRA_DATA);
+                BluetoothLeService.this.connectBluetoothLe(data);
+            }
+            if (message.equals(INTENT_BLE_DISCONNECT)) {
+                BluetoothLeService.this.disconnectBluetoothLe();
+            }
+            if (message.equals(INTENT_BLE_STATUS)) {
                 BluetoothLeService.this.getBluetoothStatus();
             }
-            if (message.equals(Config.INTENT_BLUETOOTH_WRITE)) {
-                byte[] bytes = intent.getByteArrayExtra(Config.INTENT_EXTRA_DATA);
-                BluetoothLeService.this.writeBluetoothLe(bytes);
+            if (message.equals(INTENT_BLE_WRITE)) {
+                byte[] data = intent.getByteArrayExtra(INTENT_EXTRA_DATA);
+                BluetoothLeService.this.writeBluetoothLe(data);
             }
         }
     };
